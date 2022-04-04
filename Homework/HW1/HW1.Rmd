@@ -9,3 +9,54 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+## 1.
+
+### a) 
+
+Taking a parametric approach will have following pros:  
+ - Does not need a lot of data  
+ - Simplifies the problem because it is generally much easier to estimate a set of parameters
+and cons:  
+ - The model we choose will usually not match the true unknown form of $f$, and if
+ the chosen model is too far from the true $f$, then our estimate will be poor.  
+Taking a nonparametric approach will have following pros:  
+ - Avoid unnecessary assumptions about the functional form of $f$ will have the
+ potential to accurately fit a wider range of possible shapes for $f$.  
+ and cons:  
+ - A very large number of observations is required in order to obtain an accurate
+ estimate for $f$.  
+ 
+### b)
+
+For parametric approach, I would say when we have a small number of observations
+to work with, such as getting survey on people's blood pressure and hours of physical 
+exercises they do each week. And we know that having more time to exercises will result in a lower blood pressure
+as a matter of fact. Hence we can make assumptions to $f$ in this case to be a 
+linear model:
+\[blood\;pressure \approx \beta_0 + \beta_1 \times physical\;exercises\]
+
+### c)
+
+For non-parametric approach, I would say when we have a lot of data to work with,
+we can use this method to do the same prediction as part b). 
+
+
+
+## 2.
+
+### a) 
+
+
+## 3.
+
+### a)
+ It is a regression problem. And the goal is prediction, where $n = 50, p = 8$.
+ 
+### b)
+ It is a classification problem. And the goal is inference, where $n = 50, p = 6$.
+ 
+## 4.
+
+### a)
+
+ 
