@@ -46,6 +46,15 @@ we can use this method to do the same prediction as part b).
 
 ### a) 
 
+In this case, I would expect the inflexible methods to perform better. Since sample
+size is small, there won't be enough data for flexible methods such as deep learning
+and etc. Also, the number of predictors are large, hence it would be a good practice
+to use OLS so that we have more interpretability. Hence inflexible methods tends to perform better.
+
+### b)
+
+In this case, I would expect the flexible method to perform better.
+
 
 ## 3.
 
@@ -59,4 +68,38 @@ we can use this method to do the same prediction as part b).
 
 ### a)
 
- 
+## 5.
+
+
+## 6.
+
+
+
+## 7.
+
+
+```{r ex7_import_data}
+library(ISLR2)
+```
+
+### a)
+```{r ex7a}
+data <- Boston
+head(data)
+
+# Get number of rows
+row_number <- nrow(data)
+
+# Get number of columns
+col_number <- ncol(data)
+
+```
+
+Number of rows represent the number of observations in our dataset. And number of 
+columns represent the number of predictors we have.
+
+### b)
+```{r}
+plot(data$age, data$crim)
+```
+
