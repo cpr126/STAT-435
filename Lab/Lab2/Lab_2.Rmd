@@ -1,0 +1,58 @@
+---
+title: "Week 2: Linear Regression"
+author: "Peiran Chen"
+date: "4/6/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Linear Regression
+
+$$
+y = X\beta + \varepsilon\\
+\hat\beta = (X^TX)^{-1}X^Ty
+$$
+Both $X, \beta$ has p+1 terms. $y$ have $n$ terms.
+$$
+RSS = \sum (y_i - \hat y_i)^2\\
+TSS = \sum(y_i - \bar y)^2
+$$
+
+We have null $H_0: \beta_1 = ... = \beta_p = 0$. And alternative$H_1:$ at least one $\beta_j \neq 0$.
+\[F = \frac{(TSS-RSS)/p}{RSS/n-p-1}\]
+If F-statistic is large, we have more evidence to reject $H_0$.
+Notice we need $n-p-1 >0$.
+```{r}
+library(ISLR2)
+fit <- lm(Sales ~ Age + Price + CompPrice + Population + Income:Advertising, data = Carseats)
+summary(fit)
+
+fit_no_pop <- lm(Sales ~ Age + Price + CompPrice + Income:Advertising, data = Carseats)
+anova(fit, fit_no_pop)
+```
+
+### Diagnostic plots:
+
+```{r}
+layout(matrix(c(1,2,3,4),2,2))
+plot(fit)
+```
+### Variable Selection:
+
+If $p$ is large, looking at individual $p-$values is misleading  
+
+  - p-value < 0.05: When $\beta_j = 0$, we have less than 5\% probability for it to 
+  be significant.  
+  
+F-test does not suffer from this problem, but require $n > p$.
+
+### Potential Problems with LR:
+
+  - Assuming linear relationship
+  - Independence of errors
+  - Constant variance of errors, or heteroscedasticity
+  
+  
