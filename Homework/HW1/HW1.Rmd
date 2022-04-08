@@ -7,6 +7,7 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
 ```
 
 ## 1.
@@ -70,8 +71,33 @@ In this case, I would expect the flexible method to perform better.
 
 ## 5.
 
+### a)
+
+```{r ex5a}
+n <- 25
+red <- rnorm(n, 0, 1)
+blue <- rnorm(n, 1.5, 1)
+df_train <- data.frame("red" = red, "blue" = blue)
+
+plot(df_train,
+     pch = 15,
+     col = c("red", "blue"))
+```
+
+```{r ex5b}
+# Generating test set
+test_red <- rnorm(n, 0, 1)
+test_blue <- rnorm(n, 0, 1.5)
+df_test <- data.frame("test_red" = test_red, "test_blue" = test_blue)
+
+plot(df_test)
+```
 
 ## 6.
+
+
+### a)
+
 
 
 
