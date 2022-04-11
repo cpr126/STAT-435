@@ -8,6 +8,7 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(sqldf)
 ```
 
 ## 1.
@@ -104,7 +105,7 @@ plot(df_test)
 ## 7.
 
 
-```{r ex7_import_data}
+```{r ex7_import_data, warning=FALSE}
 library(ISLR2)
 ```
 
@@ -120,12 +121,169 @@ row_number <- nrow(data)
 col_number <- ncol(data)
 
 ```
-
+And there are `r col_number` columns, and `r row_number` rows.
 Number of rows represent the number of observations in our dataset. And number of 
-columns represent the number of predictors we have.
+columns represent the number of features/predictors each observations have we have.
 
 ### b)
 ```{r}
-plot(data$age, data$crim)
+par(mfrow =c(2,2))
+plot(data$age, data$crim) # check and see if crime rate is related to age of the units build prior to 1940
+plot(data$age, data$rm) # check if number of rooms is related to age of the units build prior to 1940
+plot(data$ptratio, data$medv) # check if the number of students per teacher has an effect on median value of homes
+plot(data$dis, data$medv) # check if the distance to employment centers has an effect on median value of homes
 ```
+My findings are:
+
+  - newily built units tends to have lower per captia crime rate by town
+  - newily build units tend to have more rooms compare to old units
+  - the higher student per teacher ratio, the lower their median house prices tend to bee
+  - People lives close to the business center of Boston tend to have lower median house prices
+  
+  
+### c.
+
+From my finding in part b. I believe that there's relationship between proportion
+of owner-occupied units built prior to 1940 and per capita crime rate.
+
+And the relationship is exponential, as the proportion of old houses grow, the 
+number of per capita crime rate grows exponentially.
+
+
+### d.
+
+
+### e.
+
+```{r}
+sum(data$chas)
+```
+35 suburbs in this data set bound the Charles river
+
+### f.
+
+```{r}
+mean(data$ptratio)
+sd(data$ptratio)
+```
+Mean of pupil-teacher ratio is 18.45553 and standard deviation of pupil-teacher ratio
+is 2.164946.
+
+
+### g.
+
+```{r ex7g}
+highest_medv <- sqldf("SELECT * FROM data
+             WHERE medv =(SELECT MAX(medv) FROM data)")
+highest_medv
+```
+
+
+```{r}
+n <- row_number
+par(mfrow = c(2,2))
+plot(sort(data$crim),(1:n - 1)/(n - 1), type="l",
+xlab = "Per capita crime rate by town",
+ylab = "Quantile")
+abline(v=mean(highest_medv$crim), col="blue")
+
+
+plot(sort(data$zn), (1:n - 1)/(n - 1), type="l",
+xlab = "proportion of residential land zoned for lots over 25,000 sq.ft",
+ylab = "Quantile")
+abline(v=mean(highest_medv$zn), col="blue")
+
+
+plot(sort(data$indus), (1:n - 1)/(n - 1), type="l",
+xlab = "proportion of non-retail business acres per town",
+ylab = "Quantile")
+abline(v=mean(highest_medv$indus), col="blue")
+
+
+plot(sort(data$chas), (1:n - 1)/(n - 1), type="l",
+xlab = "Charles River dummy variable",
+ylab =  "Quantile")
+abline(v=mean(highest_medv$chas), col="blue")
+
+
+par(mfrow = c(2,2))
+
+plot(sort(data$nox),(1:n - 1)/(n - 1), type="l",
+xlab = "nitrogen oxides concentration",
+ylab = "Quantile")
+abline(v=mean(highest_medv$nox), col="blue")
+
+
+plot(sort(data$rm), (1:n - 1)/(n - 1), type="l",
+xlab = "average number of rooms per dwelling",
+ylab = "Quantile")
+abline(v=mean(highest_medv$rm), col="blue")
+
+
+plot(sort(data$age), (1:n - 1)/(n - 1), type="l",
+xlab = "proportion of owner-occupied units built prior to 1940",
+ylab = "Quantile")
+abline(v=mean(highest_medv$age), col="blue")
+
+
+plot(sort(data$dis), (1:n - 1)/(n - 1), type="l",
+xlab = "weighted mean of distances to five Boston employment centres",
+ylab =  "Quantile")
+abline(v=mean(highest_medv$dis), col="blue")
+
+par(mfrow = c(2,2))
+
+plot(sort(data$rad), (1:n - 1)/(n - 1), type="l",
+xlab = "index of accessibility to radial highways",
+ylab = "Quantile")
+abline(v=mean(highest_medv$rad), col="blue")
+
+
+plot(sort(data$tax), (1:n - 1)/(n - 1), type="l",
+xlab = "full-value property-tax rate per $10,000",
+ylab =  "Quantile")
+abline(v=mean(highest_medv$tax), col="blue")
+
+plot(sort(data$ptratio), (1:n - 1)/(n - 1), type="l",
+xlab = "pupil-teacher ratio by town",
+ylab = "Quantile")
+abline(v=mean(highest_medv$ptratio), col="blue")
+
+
+plot(sort(data$lstat), (1:n - 1)/(n - 1), type="l",
+xlab = "lower status of the population",
+ylab =  "Quantile")
+abline(v=mean(highest_medv$lstat), col="blue")
+```
+```{r}
+summary(Boston)
+```
+As we can see from above quantile graphs, we can see that suburbs with highest median
+value of owner-occupied homes(in blue line) tends to:
+
+  - have low per capita crime rate by town
+  - have smaller proportion of residential land 
+  - at 50th percentile for proportion of non-retail business acres per town
+  - at around 50th percentile for nitrogen oxides concentration
+  - have more rooms
+  - at around 50th percentile for proportion of owner-occupied units built prior to 1940
+  - closer to five Boston employment centers
+  - between median and 3rd quantile in terms of accessibility to radial highways
+  - at around 50th percentile for full-value property-tax rate per $10,000.
+  - have smaller pupil-teacher ratio by town
+  - have smaller percent of lower status of the population
+  
+  
+### h.
+
+```{r}
+sqldf("SELECT COUNT(*) AS more_than_six FROM Boston
+      WHERE rm > 6")
+
+sqldf("SELECT * FROM Boston
+      WHERE rm > 8")
+```
+
+It tends to have lowewr crime rate.
+
 
