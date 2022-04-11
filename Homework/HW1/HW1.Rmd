@@ -43,7 +43,6 @@ For non-parametric approach, I would say when we have a lot of data to work with
 we can use this method to do the same prediction as part b). 
 
 
-
 ## 2.
 
 ### a) 
@@ -55,8 +54,17 @@ to use OLS so that we have more interpretability. Hence inflexible methods tends
 
 ### b)
 
-In this case, I would expect the flexible method to perform better.
+In this case, I would expect the inflexible method to perform better. Since the 
 
+The risk of over-fitting is very high and any patterns picked up by flexible methods are more likely to be mere noise. Therefore an inflexible method should be preferred.
+
+### c)
+
+Inflexible methods have a lot of trouble picking up non-linear relationships, so we should prefer a flexible method.
+
+### d)
+
+In this case, I would expect inflexible method to perform better. Higher variance will tend to introduce noise. The high variance of error terms means that the sample will have a lot of noise in the relationship. Therefore we should prefer an inflexible method that is less likely to over-fit to this noise.
 
 ## 3.
 
@@ -69,6 +77,7 @@ In this case, I would expect the flexible method to perform better.
 ## 4.
 
 ### a)
+  
 
 ## 5.
 
@@ -99,6 +108,9 @@ plot(df_test)
 
 ### a)
 
+```{r ex6a}
+
+```
 
 
 
@@ -284,6 +296,6 @@ sqldf("SELECT * FROM Boston
       WHERE rm > 8")
 ```
 
-It tends to have lowewr crime rate.
+It tends to have lower crime rate.
 
 
