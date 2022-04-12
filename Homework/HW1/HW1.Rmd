@@ -17,7 +17,7 @@ library(sqldf)
 
 Taking a parametric approach will have following pros:  
  - Does not need a lot of data  
- - Simplifies the problem because it is generally much easier to estimate a set of parameters
+ - Simplifies the problem because it is generally much easier to estimate a set of parameters  
 and cons:  
  - The model we choose will usually not match the true unknown form of $f$, and if
  the chosen model is too far from the true $f$, then our estimate will be poor.  
@@ -86,7 +86,7 @@ true $f$ is linear, but $\hat f$ is derived with a very flexible approach, which
 
 ### d)
 
-$\hat f$ in this case would be a linear fit(least squares). And the true $f$ is not so linear, hence it will introduce high bias since we assume the data is a linear fit. And It tends to have low Variance since the result from a linear fit is consistent.
+One of the example of $\hat f$ in this case would be a linear fit(least squares). And the true $f$ is not so linear, hence it will introduce high bias since we assume the data is a linear fit. And It tends to have low Variance since the result from a linear fit is consistent.
 
 ## 5.
 
@@ -94,34 +94,182 @@ $\hat f$ in this case would be a linear fit(least squares). And the true $f$ is 
 
 ```{r ex5a}
 n <- 25
-red <- rnorm(n, 0, 1)
-blue <- rnorm(n, 1.5, 1)
-df_train <- data.frame("red" = red, "blue" = blue)
 
-plot(df_train,
-     pch = 15,
-     col = c("red", "blue"))
+red <- data.frame(X1 = rnorm(n, 0, 1), X2 = rnorm(n, 0, 1)) %>%
+  mutate(color = "red")
+blue <- data.frame(X1 = rnorm(n, 1.5, 1), X2 = rnorm(n, 1.5, 1)) %>%
+  mutate(color = "blue")
+
+trainset <- rbind(red, blue)
+
+plot(trainset$X1, trainset$X2,
+     col = trainset$color,  xlab = "X1", ylab = "X2", pch = 16)
+legend("topleft",
+       c("red", "blue"),
+       col = c("red", "blue"),
+       pch = 16
+       )
 ```
+### b.
 
 ```{r ex5b}
 # Generating test set
-test_red <- rnorm(n, 0, 1)
-test_blue <- rnorm(n, 0, 1.5)
-df_test <- data.frame("test_red" = test_red, "test_blue" = test_blue)
+test_red <- data.frame(X1 = rnorm(n, 0, 1), X2 = rnorm(n, 0, 1)) %>%
+  mutate(color = "red")
+test_blue <- data.frame(X1 = rnorm(n, 1.5, 1), X2 = rnorm(n, 1.5, 1)) %>%
+  mutate(color = "blue")
 
-plot(df_test)
+testset <- rbind(test_red, test_blue)
+
+plot(testset$X1, testset$X2, col = testset$color, pch = 16, xlab = "X1", ylab = "X2")
+points(trainset$X1, trainset$X2, col = trainset$color, pch = 17)
+legend("topleft",
+       c("train_blue", "train_red", "test_blue", "test_red"),
+       col = c("blue", "red", "blue", "red"),
+       pch = c(17,17,16,16)
+       )
+
 ```
 
-## 6.
+### c)
 
+```{r}
+library(class)
+train <- trainset[,1:2]
+test <- testset[,1:2]
+
+train_error <- rep(0, 20)
+test_error <- rep(0, 20)
+k <- c(1:20)
+
+
+cl <- factor(c(rep("red", 25),rep("blue", 25)))
+smallest_test_error <- data.frame(1, NA)
+for (i in k) {
+  predictions_train <- knn(train, train, cl, k = i, prob = FALSE)
+  train_error[i] <- mean(predictions_train != cl)
+  predictions_test <- knn(train, test, cl, k = i, prob = FALSE)
+  test_error[i] <- mean(predictions_test != cl)
+  if(test_error[i] < smallest_test_error[1]){
+    smallest_test_error[1] = test_error[i]
+    smallest_test_error[2] = i
+  } 
+}
+plot(1/k , train_error, col='red', type = 'b', ylim = c(0, 0.4), ylab = "error rate", xlab = "1/K")
+points(1/k, test_error, col='blue', type = 'b')
+legend("topright",
+       col = c("red", "blue"),
+       c("Train Error", "Test Error"),
+       pch = c(1,1))
+```
+As $k$ decreases, $1/k$ increases, which means the level of flexibility increases. And our result shows that training error can be reduced to zero, however, our test error tends to wobble and create a "U-Shape". Hence, it's critical to choose a proper number of neighbors $k$.
+
+### d)
+
+```{r ex5d}
+plot(testset$X1, testset$X2, col = testset$color, pch = 20, xlab = "X1", ylab = "X2")
+points(testset$X1, testset$X2, col = paste0("",knn(train, test, cl, k = smallest_test_error[2], prob = FALSE),""), pch = 1)
+legend("topright",
+       c("red test", "blue test", "red predict", "blue predict"),
+       col = c("red", "blue", "red", "blue"),
+       pch = c(20,20,1,1))
+```
+### e).
+
+The formula gives us the intuition on how to calculate the Bayes Error Rate
+$$
+1 - E[\max_j P(Y = j | X)] = 
+$$
+In this case, the Bayes Error Rate would be, and it relates to part c) and d) where the Test Error is always going to be greater than the Bayes Error Rate. Hence it is just like the irreducible error term, where it is the best we can do when fitting data.
+
+
+
+## 6.
 
 ### a)
 
 ```{r ex6a}
+n <- 200
+
+determine_color <- function(X1, X2){
+  f = (X1 - 0.5)^2 + (X2 - 0.5)^2
+  ifelse(f > 0.15, ifelse(X1 > 0.5, "red", "green"), "blue")
+}
+
+trainset <- tibble(X1 = runif(n,0,1),
+                   X2 = runif(n,0,1),
+                   color = determine_color(X1, X2))
+
+plot(trainset$X1, trainset$X2,
+     col = trainset$color,  xlab = "X1", ylab = "X2", pch = 16)
+legend("topleft",
+       c("red", "green", "blue"),
+       col = c("red","green", "blue"),
+       pch = 16
+       )
+```
+
+### b).
+
+```{r}
+testset <- tibble(X1 = runif(n,0,1),
+                   X2 = runif(n,0,1),
+                   color = determine_color(X1, X2))
+
+plot(testset$X1, testset$X2, col = testset$color, pch = 16, xlab = "X1", ylab = "X2")
+points(trainset$X1, trainset$X2, col = trainset$color, pch = 17)
+legend("topleft",
+       c("train_red","train_green","train_blue","test_red", "test_green", "test_blue"),
+       col = c("red", "green", "blue", "red","green","blue"),
+       pch = c(17,17,17,16,16,16)
+       )
 
 ```
 
+### c).
 
+```{r}
+library(class)
+train <- trainset[,1:2]
+test <- testset[,1:2]
+
+train_error <- rep(0, 50)
+test_error <- rep(0, 50)
+k <- c(1:50)
+
+
+smallest_test_error <- data.frame(1, NA)
+for (i in k) {
+  predictions_train <- knn(train, train, cl = trainset$color, k = i, prob = FALSE)
+  train_error[i] <- mean(predictions_train != trainset$color)
+  predictions_test <- knn(train, test, cl = trainset$color, k = i, prob = FALSE)
+  test_error[i] <- mean(predictions_test != testset$color)
+  if(test_error[i] < smallest_test_error[1]){
+    smallest_test_error[1] = test_error[i]
+    smallest_test_error[2] = i
+  } 
+}
+
+plot(1/k , train_error, col='red', type = 'b', ylim = c(0, 0.4), ylab = "error rate", xlab = "1/K")
+points(1/k, test_error, col='blue', type = 'b')
+legend("topright",
+       col = c("red", "blue"),
+       c("Train Error", "Test Error"),
+       pch = c(1,1))
+```
+
+### d).
+```{r}
+plot(testset$X1, testset$X2, col = testset$color, pch = 20, xlab = "X1", ylab = "X2")
+points(testset$X1, testset$X2, col = paste0("",knn(train, test, trainset$color, k = smallest_test_error[2], prob = FALSE),""), pch = 1)
+legend("topleft",
+       c("red test", "green test", "blue test", "red predict", "green predict", "blue predict"),
+       col = c("red","green", "blue", "red","green", "blue"),
+       pch = c(20,20,20,1,1,1)
+       )
+```
+### e).
+In this case, the Bayes Error Rate would be, and it relates to part c) and d) where the Test Error is always going to be greater than the Bayes Error Rate. Hence it is just like the irreducible error term, where it is the best we can do when fitting data.
 
 ## 7.
 
@@ -173,12 +321,25 @@ number of per capita crime rate grows exponentially.
 
 ### d.
 
+```{r}
+range(data$crim)
+range(data$tax)
+range(data$ptratio)
+
+par(mfrow = c(2,2))
+hist(data$crim, freq = FALSE, breaks = 25)
+hist(data$tax, freq = FALSE)
+hist(data$ptratio, freq = FALSE)
+```
+As we can see from the above range and histograms of Per Capita Crime Rate, Tax rate and pupil-teacher ratio. We can see that the crime rate in Boston has a longer tail, hence,  despite lower crime rate in most towns, some town in Boston could have really high crime rate. And for tax, there's a huge divide between suburbs. And for pupil-teacher ratio, it is skewed to the left, and peaked at 20-21.
+
 
 ### e.
 
 ```{r}
 sum(data$chas)
 ```
+
 35 suburbs in this data set bound the Charles river
 
 ### f.
@@ -276,6 +437,7 @@ xlab = "lower status of the population",
 ylab =  "Quantile")
 abline(v=mean(highest_medv$lstat), col="blue")
 ```
+
 ```{r}
 summary(Boston)
 ```
