@@ -176,11 +176,24 @@ legend("topright",
 ```
 ### e).
 
-The formula gives us the intuition on how to calculate the Bayes Error Rate
-$$
-1 - E[\max_j P(Y = j | X)] = 
-$$
-In this case, the Bayes Error Rate would be, and it relates to part c) and d) where the Test Error is always going to be greater than the Bayes Error Rate. Hence it is just like the irreducible error term, where it is the best we can do when fitting data.
+The formula gives us the intuition on how to calculate the Bayes Error Rate, it has nothing to do with $knn$, just a nature of how probabilities fluctuates. That is, we can see from mathematically proofing using PDF and see how many are overlaping.
+Let:
+
+\[X_1 \sim N(0, 1)\]
+\[X_2 \sim N(1.5,1)\]
+
+And let $c$ denote the point of intersection where the PDF's meet. Then, the area can be given
+
+\begin{align*}
+ P(X_1> c) + P(X_2 < c) &= 1 - F_1(c) + F_2(c)\\
+&= 1 - \frac12\text{erf}(\frac{c - \mu_1}{\sqrt{2}\sigma_1}) + \frac12\text{erf}(\frac{c - \mu_2}{\sqrt{2}\sigma_2})\\
+c & = \frac{\mu_2\sigma^2 - \sigma_2(\mu_1\sigma_2 + \sigma_1\sqrt{(\mu_1 - \mu_2)^2 + 2(\sigma_1^2 - \sigma_2^2\log(\frac{\sigma_1}{\sigma_2}))})}{\sigma^2_1 - \sigma^2_2}\\
+&\text{However, in this case, variance are the same} \\
+c &= \frac{\mu_1 + \mu_2}{2} = 1.25
+\end{align*}
+
+And Bayes Error Rate would be the volume of that area squared divided by the whole area of two normal distribution formed in $\mathbb{R}^3$, $ P(X_1> c) + P(X_2 < c)  = 0.8025$. but I don't know how to do it :(.
+In this case, the Bayes Error Rate would be , and it relates to part c) and d) where the Test Error is always going to be greater than the Bayes Error Rate. Hence it is just like the irreducible error term, where it is the best we can do when fitting data.
 
 
 
@@ -223,7 +236,6 @@ legend("topleft",
        col = c("red", "green", "blue", "red","green","blue"),
        pch = c(17,17,17,16,16,16)
        )
-
 ```
 
 ### c).
@@ -269,7 +281,12 @@ legend("topleft",
        )
 ```
 ### e).
-In this case, the Bayes Error Rate would be, and it relates to part c) and d) where the Test Error is always going to be greater than the Bayes Error Rate. Hence it is just like the irreducible error term, where it is the best we can do when fitting data.
+
+```{r}
+bayes_error_rate <- mean(train_error)
+```
+
+In this case, the Bayes Error Rate would be `r bayes_error_rate`, and it relates to part c) and d) where the Test Error is always going to be greater than the Bayes Error Rate. Hence it is just like the irreducible error term, where it is the best we can do when fitting data.
 
 ## 7.
 
