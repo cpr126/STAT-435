@@ -1,0 +1,25 @@
+---
+title: "HW2"
+author: "Peiran Chen"
+date: "4/13/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ISLR2)
+```
+
+## 1.
+
+```{r}
+head(Auto)
+lm_1 <- lm(mpg ~ cylinders + displacement + horsepower + weight + acceleration + year + origin, data = Auto)
+summary(lm_1)
+```
+Yes, there is a relatioship between the predictors and the response by testing the null hypothesis of whether all the regression coefficients are zero. The F-statistic is far from 1 (with a small p-value), indicating evidence against the null hypothesis.
+
+
+
+### b.

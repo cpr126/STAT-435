@@ -1,0 +1,155 @@
+---
+title: "Lab3"
+author: "Peiran Chen"
+date: "4/13/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Collinearity
+
+ Sometimes, some predictors are correlated, which can reduce the accuracy of the $\hat\beta_j$.  
+ 
+ It is hard to separate effects
+ 
+ Indicator: variance Inflation Factor is the ratio of the variance of $\hat\beta_j$ when fitting the full model divided by the variance of $\hat\beta_j$ when fitting on it's own.
+ 
+ As a rule of thumb, a VIF value that exceeds 5 or 10 indicates col linearity.
+ 
+```{r collinearity}
+library(MASS)
+rho = 0.5
+Sigma_1 <- matrix(c(1,rho,rho,1), 2, 2)
+Sigma_1
+n <- 1000
+x<- mvrnorm(n, mu = c(1,1), Sigma = Sigma_1)
+x_2 <- rnorm(n, 0, 1)
+y <- 0.5 + 0.4*x[,1] - 0.3 * x_2 + rnorm(n)
+
+simple_lm <- lm(y ~ x[, 2])
+multiple_lm <- lm(y ~ x[,1] + x[,2] + x_2)
+summary(multiple_lm)
+```
+Increase in correlation is going to affect the result 
+
+
+```{r}
+rho = 0.99
+Sigma_1 <- matrix(c(1,rho,rho,1), 2, 2)
+Sigma_1
+n <- 1000
+x<- mvrnorm(n, mu = c(1,1), Sigma = Sigma_1)
+x_2 <- rnorm(n, 0, 1)
+y <- 0.5 + 0.4*x[,1] - 0.3 * x_2 + rnorm(n)
+
+simple_lm <- lm(y ~ x[, 2])
+multiple_lm <- lm(y ~ x[,1] + x[,2] + x_2)
+summary(multiple_lm)
+```
+Problem with collinearity.
+
+
+```{r}
+library(car)
+vif(multiple_lm)
+```
+
+
+## Outliers
+
+Problem: some poitns have very different $y_i$ than $\hat y_i$, which can change RSE and R^2 significantly(goodness of fit)
+
+Example: Regress heigh on weight using a dataset containing Manute Bol(y = 7'7", x = 210 lb)
+
+Possible treatment: double check data 
+
+```{r outliers}
+n <- 1000
+x <- rnorm(n)
+y <- 0.5 + x + rnorm(n)
+
+original_fit <- lm(y ~ x)
+residual_se <- sigma(original_fit)
+
+
+y_otl = y
+y_otl[500] = y_otl[500] + 10
+
+```
+
+
+## High-leverage points
+
+  - Problem: some poitns have very unusual $x_i$, which have the potential to change the fit significantly.
+
+  - Example: Regress height on weight using a dataset containing the Hulk(y = 7'6", x = 1150 lb)
+
+  - Hard to eye ball in multivarite regression
+  
+  - Potentially to significant change the linear regression
+  
+  
+## Bayes Error Rate
+
+For 2-class problem:
+
+  - For any given x, if we can calculate $P(Y = 0| x)$ and $P(Y = 1| x)$ we always predict Y to be the more likely class.
+  
+  - Risk?
+      - Y could be from the less likely class
+      - For any given x, we expect the error to be
+      $1 - E[P(Y \text{ from the most likely class}| x)]$
+  - The expectation is taken w.r.t. the probability of all possible X.
+  - It only depends on how X and Y are generated
+  - It does not depend on training/testing data
+  
+## Logistic Regression
+
+Lab on the smarket( Stock Market) Dataset
+
+  - Predict whether the stock market was Up or Down
+  
+```{r smarket}
+library(ISLR2)
+head(Carseats)
+
+lm.fit <- lm(Sales ~ . + Income:Advertising + Price:Age, data = Carseats)
+contrasts(Carseats$ShelveLoc)
+
+
+```
+
+
+```{r}
+head(Smarket)
+pairs(Smarket)
+
+# Not much correlation
+cor(Smarket[, - 9]) # Except the last column
+
+plot(Smarket$Volume)
+
+glm.fit <- glm(
+  Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume,
+  data = Smarket, family = binomial
+)
+summary(glm.fit)$coef
+
+# Modeling the probability
+
+glm.probs <- predict(glm.fit, type = "response") # to get probability, need type = response
+# Prob on the training dataset
+glm.probs[1:5]
+contrasts(Smarket$Direction) # See how R encode response to binary outcome
+
+glm.pred <- rep("Down", 1250)
+glm.pred[glm.probs > .5] = "Up"
+
+table(glm.pred, Smarket$Direction)
+
+(145 + 507)/1250
+```
+
