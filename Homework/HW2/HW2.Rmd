@@ -18,8 +18,29 @@ head(Auto)
 lm_1 <- lm(mpg ~ cylinders + displacement + horsepower + weight + acceleration + year + origin, data = Auto)
 summary(lm_1)
 ```
-Yes, there is a relatioship between the predictors and the response by testing the null hypothesis of whether all the regression coefficients are zero. The F-statistic is far from 1 (with a small p-value), indicating evidence against the null hypothesis.
+Yes, there is a relationship between the predictors and the response by testing the null hypothesis of whether all the regression coefficients are zero. The F-statistic is far from 1 (with a small p-value), indicating evidence against the null hypothesis.
 
 
 
 ### b.
+
+```{r ex1b}
+train_MSE <- mean(lm_1$residuals^2)
+```
+The train MSE in this linear model is `r train_MSE`.
+
+
+### c.
+
+Since it's not hard to see that Origin = 3 means a Japanese car
+```{r ex1c}
+# Filter Data into only Japanese Car
+# Auto_Japan <- Auto %>%
+#   filter(origin == 3)
+
+# This time, I choose to drop Year and fit a new model
+# lm_2 <- lm(mpg ~ cylinders + displacement + horsepower + weight + acceleration, data = Auto_Japan)
+
+prediction_1 <- predict(lm_1, data.frame(cylinders = 3, displacement = 100, horsepower = 85, weight = 3000, acceleration = 20, origin = 3, year = 1980))
+```
+The mileage my model predict for the given car is `r prediction_1[1]`
