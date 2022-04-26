@@ -9,6 +9,7 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(ISLR2)
+library(matlib)
 ```
 
 ## 1.
@@ -16,7 +17,6 @@ library(ISLR2)
 ```{r}
 head(Auto)
 lm_1 <- lm(mpg ~ cylinders + displacement + horsepower + weight + acceleration + year + origin, data = Auto)
-summary(lm_1)
 ```
 Yes, there is a relationship between the predictors and the response by testing the null hypothesis of whether all the regression coefficients are zero. The F-statistic is far from 1 (with a small p-value), indicating evidence against the null hypothesis.
 
@@ -34,13 +34,367 @@ The train MSE in this linear model is `r train_MSE`.
 
 Since it's not hard to see that Origin = 3 means a Japanese car
 ```{r ex1c}
-# Filter Data into only Japanese Car
-# Auto_Japan <- Auto %>%
-#   filter(origin == 3)
-
-# This time, I choose to drop Year and fit a new model
-# lm_2 <- lm(mpg ~ cylinders + displacement + horsepower + weight + acceleration, data = Auto_Japan)
 
 prediction_1 <- predict(lm_1, data.frame(cylinders = 3, displacement = 100, horsepower = 85, weight = 3000, acceleration = 20, origin = 3, year = 1980))
 ```
-The mileage my model predict for the given car is `r prediction_1[1]`
+The mileage my model predict for the given car is `r prediction_1[1]`.
+
+
+### d.
+
+```{r ex1c}
+mpg_origin <- data.frame(
+  mpg = predict(lm_1),
+  origin = Auto$origin
+)
+difference <- mean(mpg_origin$origin == 1) - mean(mpg_origin$origin == 3)
+```
+On average, the difference between the \textbf{mpg} of a Japanese car is `r difference` below the \textbf{mpg} of a American car.
+
+### e.
+
+```{r ex1e}
+lm_2 <- lm(mpg~ horsepower, data = Auto)
+10*lm_2$coefficients[2]
+```
+Hence, with 10 units increase in horsepower, we will see a -1.578447 decrease in
+mpg. 
+
+## 2.
+
+
+### a.
+
+Suppose we have $y_i$ as the mpg of $i^{th}$ vehicle. And 
+$$
+y_i = \beta_0 + \beta_1x_{i1} + \beta_{2}x_{i2} + \varepsilon_i = \left\{\begin{aligned}
+\beta_0 + \beta_1 + \varepsilon_i \text{  if }i\text{th car is American made}\\
+\beta_0 + \beta_2 + \varepsilon_i \text{  if }i\text{th car is European made}\\
+\beta_0 + \varepsilon_i \text{  if }i\text{th car is Japanese made}\\
+\end{aligned}
+\right.
+$$
+
+```{r ex2a}
+Auto_new <- Auto %>%
+  mutate("American" = 1, "European" = 1)
+
+
+Auto_new$American <- ifelse(Auto$origin == 1, 1, 0)
+Auto_new$European <- ifelse(Auto$origin == 2, 1, 0)
+
+lm(mpg~ American + European, data = Auto_new)
+```
+Hence, the mpg prediction for a Japanese Car is 30.451, for American Car is 20.034,
+and 27.603 for European Car.
+
+### b.
+Suppose we have $y_i$ as the mpg of $i^{th}$ vehicle. And 
+$$
+y_i = \beta_0 + \beta_1x_{i1} + \beta_{2}x_{i2} + \varepsilon_i = \left\{\begin{aligned}
+\beta_0 + \beta_1 + \varepsilon_i \text{  if }i\text{th car is Japanese made}\\
+\beta_0 + \beta_2 + \varepsilon_i \text{  if }i\text{th car is European made}\\
+\beta_0 + \varepsilon_i \text{  if }i\text{th car is American made}\\
+\end{aligned}
+\right.
+$$
+
+```{r ex2a}
+Auto_new <- Auto %>%
+  mutate("Japanese" = 1, "European" = 1)
+
+
+Auto_new$Japanese <- ifelse(Auto$origin == 3, 1, 0)
+Auto_new$European <- ifelse(Auto$origin == 2, 1, 0)
+
+lm(mpg~ Japanese + European, data = Auto_new)
+```
+Hence, the mpg prediction for a Japanese Car is 30.45, for American Car is 20.033,
+and 27.602 for European Car.
+
+### c.
+
+Suppose we have $y_i$ as the mpg of $i^{th}$ vehicle. And 
+$$
+y_i = \beta_0 + \beta_1x_{i1} + \beta_{2}x_{i2} + \varepsilon_i = \left\{\begin{aligned}
+\beta_0 + \beta_1 - \beta_2 + \varepsilon_i \text{  if }i\text{th car is American made}\\
+\beta_0 - \beta_1 + \beta_2 + \varepsilon_i \text{  if }i\text{th car is European made}\\
+\beta_0 - \beta_1 - \beta_2 + \varepsilon_i \text{  if }i\text{th car is Japanese made}\\
+\end{aligned}
+\right.
+$$
+
+```{r}
+Auto_new <- Auto %>%
+  mutate("American" = 1, "European" = 1)
+
+
+Auto_new$American <- ifelse(Auto$origin == 1, 1, -1)
+Auto_new$European <- ifelse(Auto$origin == 2, 1, -1)
+
+lm(mpg~ American + European, data = Auto_new)
+```
+Hence, the mpg prediction for a Japanese Car is 30.451, for American Car is 20.033,
+and 27.603 for European Car.
+
+### d.
+
+Suppose we have $y_i$ as the mpg of $i^{th}$ vehicle. And 
+$$
+y_i = \beta_0 + \beta_1x_{i1} + \varepsilon_i = \left\{\begin{aligned}
+\beta_0 + \beta_1 +\varepsilon_i \text{  if }i\text{th car is American made}\\
+\beta_0 + 2\beta_1  + \varepsilon_i \text{  if }i\text{th car is European made}\\
+\beta_0 + \varepsilon_i \text{  if }i\text{th car is Japanese made}\\
+\end{aligned}
+\right.
+$$
+
+```{r}
+Auto_new["origin"][Auto_new["origin"] == 3] <- 0
+
+lm(mpg~ origin, data = Auto_new)
+```
+Hence, the mpg prediction for a Japanese Car is 25.239, for American Car is 23.394,
+and 21.549 for European Car.
+
+### e.
+
+My results from part a-c are consistent. However, for the last one, the result is
+different from previous ones. The reason for that is because the only one coefficient estimated would reflect a constrained effect where the expected mpg is incremented as a multiple of the dummy's regression coefficient.
+
+## 3.
+
+```{r ex3}
+lm_3 <- lm(mpg~origin + horsepower + I(origin * horsepower), data = Auto)
+summary(lm_3)
+```
+
+$$
+\begin{aligned}
+\text{mpg}_i &\approx \beta_0 +  \beta_1 \times \text{origin}_i + \beta_2 \times \text{horsepower}_i + \beta_3 \times (\text{origin}_i +\text{horsepower}_i)\\
+&= \beta_0 +  (\beta_1 + \beta_3)\times \text{origin}_i + (\beta_2 + \beta_3)\times \text{horsepower}_i  \\
+&= \beta_0 + (\beta_2 + \beta_3)\times \text{horsepower}_i +\left\{ \begin{aligned}
+  \beta_1 + \beta_3 \text{  if }i\text{th car is American made}\\
+ 2(\beta_1 + \beta_3) \text{  if }i\text{th car is European made}\\
+ 3(\beta_1 + \beta_3)\text{  if }i\text{th car is Japanese made}\\
+\end{aligned} \right. 
+\end{aligned}
+$$
+Hence, we see that, with one unit increase in horsepower $\Delta \text{mpg} = $
+
+## 4.
+
+### a.
+
+Since we have the model, we can just plug in and get
+
+
+\begin{align*}
+Y &= \beta_0 + \beta_1X_1 + \varepsilon\\
+\hat Y &= \hat\beta_0 + \hat\beta_1X_1\\
+\hat Y &= -165.1 + 4.8X_1\\
+\text{Given that } X_1 &= 64,\\
+\hat Y &= 146.9
+\end{align*}
+
+
+Hence, the weight I predict for an individual who is 64 inches tall is 146.9.
+
+### b.
+
+This time, we measure height in feet. That is, $X_1 = 12X_2$. And our model
+becomes
+
+
+\begin{align*}
+\hat Y &= \hat\beta_0 + \hat\beta_1X_1\\
+\hat Y &= -165.1 + 4.8 \cdot 12X_2\\
+\hat Y &= -165.1 + 57.6X_2
+\end{align*}
+
+
+Hence, we can see that $\beta_0^* = -165.1$, $\beta_1^* = 57.6$. And weight I predict
+for 5.333 feet tall is $\hat Y = -165.1 + 57.6 \cdot 5.333 = 142.0808$.
+
+### c.
+
+
+$$
+\begin{align*}
+Y &= \beta_0 + \beta_1 X_1 + \beta_2X_2 + \varepsilon \\
+Y &= \hat \beta_0 + \hat\beta_1 X_1 + \hat\beta_2X_2 + \hat e
+\end{align*}
+$$
+We want to minimize RSS s.t.
+
+$$
+\begin{align*}
+RSS = 0\\
+\sum_{i = 1}^n e_i^2 &= 0\\
+\sum_{i = 1}^n (Y - \hat\beta_0 - \hat\beta_1x_{1,i} - \hat\beta_2x_{2,i})^2 &= 0\\
+
+\end{align*}
+$$
+And we can rewrite it using matrix notation,
+\[Y= X\hat\beta  + \hat e\]
+If we apply OLS to this, that is, choose $\hat\beta$ to minimize the sum of squared residuals. Since $\hat e'\hat e = \sum_{i = 1}^n \hat e_i^2$, our OLS will be 
+\[\text{Minimize } \hat e'\hat e = (Y-X\hat\beta)'(Y-X\hat\beta)\]\[\text{with respect to } \hat\beta\]And the first order condition is 
+
+\begin{align*}
+\frac{\partial\hat e'\hat e}{\partial\hat\beta} = 2(-X')(Y-X\hat\beta) &= 0\\
+X'Y - X'X\hat\beta &= 0\\
+\hat\beta &= (X'X)^{-1}X'Y
+\end{align*}
+
+### d.
+
+
+Since we know that $X1 = 12X_2$ from part b). Since there's collinearity between$X_1,X_2$.
+And training MSE will be greatest in this case. And remains the same for the rest two since units of measurement does not change the goodness of fit of our model.
+
+
+## 5.
+
+$$
+\begin{align*}
+P(Y = 1 | X = x) &= P(Y = 2 | X = x) \\
+\frac{\pi_1f_1(x)}{\pi_1f_1(x)+\pi_2f_2(x)} &= \frac{\pi_2f_2(x)}{\pi_1f_1(x)+\pi_2f_2(x)}\\
+\pi_1f_1(x) &= \pi_2f_2(x)\\
+\pi_1 \frac1{\sigma\sqrt{2\pi}}e^{-\frac12(\frac{x - \mu}{\sigma})^2}&= \frac14\pi_2
+\end{align*}
+$$
+### b.
+
+Since we are now given the values for parameters, we can plug it in our decision
+boundary formula and see that, when $P(Y = 1 | X = x) \geqslant P(Y = 2 | X = x)$,
+we would classify it as Class one, and vice versa for class two. 
+
+$$
+\begin{align*}
+P(Y = 1 | X = x) &\geqslant P(Y = 2 | X = x) \\
+0.45 \cdot \frac1{2.506628}e^{-\frac{x^2}{2}} &\geqslant \frac14\cdot 0.55\\
+|x| &\leqslant 0.7303212
+\end{align*}
+$$
+Hence, when $x$ is in between $\pm 0.7303212$. We would classify it as Class 1, and 
+classify it to Class 2 elsewhere.
+
+```{r}
+x_base <- seq(-5, 5, by = 0.01)
+plot(x_base, dnorm(x_base,0,1), type = "l",
+     ylab = "f(x)",
+     xlab = "x value")
+lines(x_base, dunif(x_base, min = -2, max = 2))
+abline(v = 0.7303212)
+abline(v = -0.7303212)
+rect(-5,0,-0.7303212,0.5,density = 2, col = "red")
+rect(0.7303212,0,5,0.5,density = 2, col = "red")
+rect(-0.7303212,0,0.7303212,0.5,density = 2, col = "blue")
+legend("topright",
+       c("Class 1","Class 2"),
+       col = c("blue","red"),
+       lty = 1:1)
+```
+### c.
+
+We can estimate these by 
+$$
+\begin{align*}
+\hat \mu_1 &= \frac1{n_1} \sum_{i: y_i = 1} x_i\\
+\hat \pi_1 &= \frac{n_1}{n_1 + n_2}\\
+\hat \sigma_1 &= \frac1{n - 1} \sum_{k = 1}^2 \sum_{i : y_i = k}(x_i - \hat\mu_1)^2
+\end{align*}
+$$
+
+### d.
+
+$$
+\begin{align*}
+P(Y = 1 | X = x_0) &= \frac{\hat\pi_1\hat f_1(x_0)}{\hat \pi_1 \hat f_1(x_0)+ \hat\pi_2 \hat f_2(x_0)} \\
+&= \frac{\hat \pi_1 \frac1{\hat\sigma\sqrt{2\pi}}e^{-\frac12(\frac{x_0 - \hat\mu}{\hat\sigma})^2}}{\hat \pi_1 \frac1{\hat\sigma\sqrt{2\pi}}e^{-\frac12(\frac{x_0 - \hat\mu}{\hat\sigma})^2}+ \frac14\hat\pi_2}\\
+\end{align*}
+$$
+
+## 6.
+
+### a.
+
+$$
+\begin{align*}
+\log\left[\frac{p(x)}{1 - p(x)}\right] &= 0.7\\
+\beta_0 + \beta_1x_1 +...+ \beta_px_p &= 0.7\\
+\text{Hence,}\\
+P(Y = 1|X  = x)&= \frac{\exp(\beta_0 + \beta_1x_1 +...+ \beta_px_p)}{1 + \exp(\beta_0 + \beta_1x_1 +...+ \beta_px_p)}\\
+&= \frac{\exp(0.7)}{1 + \exp(0.7)}\\
+&= 0.6682
+\end{align*}
+$$
+
+
+### b.
+
+$$
+\begin{align*}
+P(Y = 1| X = x^*) &= \frac{\exp\left(\beta_0 + \beta_1x_1^* + \beta_2x_2^* +... +\beta_px_p^*\right)}{1 + \exp\left(\beta_0 + \beta_1x_1^* + \beta_2x_2^* +... +\beta_px_p^*\right)}\\
+\text{and it's odds equals}\\
+odds &= \beta_0 + \beta_1(x_1 + 1) + \beta_2(x_2 -1) + \beta_3(x_3 + 2) + ... + \beta_px_p^*\\
+&= \beta_0 + \beta_1x_1 + \beta_1 + \beta_2x_2 -\beta_2 + \beta_3x_3 + 2\beta_3 + ... + \beta_px_p^*\\
+&= 0.7 + \beta_1 -\beta_2 + 2\beta_3\\
+P(Y = 1| X = x^*) &= \frac{\exp(0.7 + \beta_1 -\beta_2 + 2\beta_3)}{1 + \exp(0.7 + \beta_1 -\beta_2 + 2\beta_3)}
+\end{align*}
+$$
+
+## 7.
+
+### a.
+
+```{r ex7a}
+n <- 50
+rho <- 0.7
+
+class_1 <- data.frame(X1 = rnorm(n, 0, 2), X2 = rnorm(n, -2, 3)) 
+class_2 <- data.frame(X1 = rnorm(n, 4, 2), X2 = rnorm(n, 4, 3))
+class_3 <- data.frame(X1 = rnorm(n, -2, 2), X2 = rnorm(n, 5, 3)) 
+
+# Convert data.frame into matrix
+C1 <- data.matrix(class_1)
+C2 <- data.matrix(class_2)
+C2 <- data.matrix(class_3)
+
+mu1 <- matrix(c(0, -2), 2, 1)
+mu2 <- matrix(c(4, 4), 2, 1)
+mu3 <- matrix(c(-2, 5), 2, 1)
+
+sigma <- matrix(c(4, 4.2, 4.2, 9), 2, 2)
+```
+
+My choice for $\mu_1 = \begin{bmatrix}0\\-2\end{bmatrix}; \mu_2 = \begin{bmatrix}4\\4\end{bmatrix}; \mu_3 = \begin{bmatrix}-2\\5\end{bmatrix}$. And $\sum = \begin{bmatrix}4 & 4.2\\4.2 & 9\\ \end{bmatrix}$.
+
+### b.
+
+```{r ex7b}
+plot(class_1$X1, class_1$X2,
+     col = "red",
+     pch = 16,
+     xlim = c(-6, 10),
+     ylim = c(-10,10),
+     xlab = "X1",
+     ylab = "X2")
+points(class_2$X1, class_2$X2, col = "green", pch = 16)
+points(class_3$X1, class_3$X2, col = "blue", pch = 16)
+
+# Calculate Bayes Devision Boundary
+```
+
+And for the decision boundary, we have to calculate the below function: 
+
+$$
+\begin{align*}
+X^T\Sigma^{-1}\mu_k - \frac12\mu_k^T\Sigma^{-1}\mu_k &= X^T\Sigma^{-1}\mu_l - \frac12\mu_l^T\Sigma^{-1}\mu_l \;\;\forall k \neq l\\
+X^T\Sigma^{-1}\mu_k - X^T\Sigma^{-1}\mu_l &= \\
+\end{align*}
+$$
+```{r}
+C1 %*% solve(sigma) %*% mu1 - as.numeric(0.5 %*% t(mu1) %*% solve(sigma) %*% mu1)
+```
+
