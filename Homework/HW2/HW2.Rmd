@@ -18,9 +18,18 @@ library(knitr)
 ```{r}
 head(Auto)
 lm_1 <- lm(mpg ~ cylinders + displacement + horsepower + weight + acceleration + year + origin, data = Auto)
+kable(data.frame(Coefficients = lm_1$coefficients))
 ```
 Yes, there is a relationship between the predictors and the response by testing the null hypothesis of whether all the regression coefficients are zero. The F-statistic is far from 1 (with a small p-value), indicating evidence against the null hypothesis.
 
+  - When cylinder increases by one unit, mpg decreases by 0.493376. 
+  - When displacement increases by one unit, mpg increases by 0.019896. 
+  - When horsepower increases by one unit, mpg decreases by 0.016951.
+  - When weight increases by one unit, mpg decreases by 0.006474.
+  - When acceleration increases by one unit, mpg increases by 0.080576.
+  - When year increases by one unit, mpg increases by 0.750773.
+  - When origin increases by one unit, mpg increases by 1.426141.
+  - The intercept term is the mpg when all other coefficients are 0, -17.2184346.
 
 
 ### b.
@@ -35,8 +44,7 @@ The train MSE in this linear model is `r train_MSE`.
 
 Since it's not hard to see that Origin = 3 means a Japanese car
 ```{r ex1c}
-
-prediction_1 <- predict(lm_1, data.frame(cylinders = 3, displacement = 100, horsepower = 85, weight = 3000, acceleration = 20, origin = 3, year = 1980))
+prediction_1 <- predict(lm_1, data.frame(cylinders = 3, displacement = 100, horsepower = 85, weight = 3000, acceleration = 20, origin = 3, year = 80))
 ```
 The mileage my model predict for the given car is `r prediction_1[1]`.
 
@@ -44,22 +52,17 @@ The mileage my model predict for the given car is `r prediction_1[1]`.
 ### d.
 
 ```{r ex1d}
-mpg_origin <- data.frame(
-  mpg = predict(lm_1),
-  origin = Auto$origin
-)
-difference <- mean(mpg_origin$origin == 1) - mean(mpg_origin$origin == 3)
+mean(Auto$mpg[Auto$origin == 3]) - mean(Auto$mpg[Auto$origin == 1])
 ```
-On average, the difference between the \textbf{mpg} of a Japanese car is `r difference` below the \textbf{mpg} of a American car.
+On average, holding all other covariates fixed, the difference between the \textbf{mpg} of a Japanese car and the \textbf{mpg} of an American car is -10.41716. That is, A 
+Japanese car have 10.41716 higher mpg than an American car on average.
 
 ### e.
 
 ```{r ex1e}
-lm_2 <- lm(mpg~ horsepower, data = Auto)
-10*lm_2$coefficients[2]
+10*lm_1$coefficients[4]
 ```
-Hence, with 10 units increase in horsepower, we will see a -1.578447 decrease in
-mpg. 
+Hence, with 10 units increase in horsepower, we will see a 0.1695114 decrease in mpg. 
 
 ## 2.
 
@@ -166,23 +169,31 @@ different from previous ones. The reason for that is because the only one coeffi
 ## 3.
 
 ```{r ex3}
-lm_3 <- lm(mpg~origin + horsepower + I(origin * horsepower), data = Auto)
+lm_3 <- lm(mpg~ origin + horsepower + origin*horsepower, data = Auto)
 summary(lm_3)
 ```
 
 $$
 \begin{aligned}
-\text{mpg}_i &\approx \beta_0 +  \beta_1 \times \text{origin}_i + \beta_2 \times \text{horsepower}_i + \beta_3 \times (\text{origin}_i +\text{horsepower}_i)\\
-&= \beta_0 +  (\beta_1 + \beta_3)\times \text{origin}_i + (\beta_2 + \beta_3)\times \text{horsepower}_i  \\
-&= \beta_0 + (\beta_2 + \beta_3)\times \text{horsepower}_i +\left\{ \begin{aligned}
-  \beta_1 + \beta_3 \text{  if }i\text{th car is American made}\\
- 2(\beta_1 + \beta_3) \text{  if }i\text{th car is European made}\\
- 3(\beta_1 + \beta_3)\text{  if }i\text{th car is Japanese made}\\
-\end{aligned} \right. 
+\text{mpg}_i &\approx \beta_0 +  \beta_1 \times \text{origin}_i + \beta_2 \times \text{horsepower}_i + \beta_3 \times (\text{origin}_i \times \text{horsepower}_i)\\
+&= \beta_0 + \beta_2 \times \text{horsepower}_i +  (\beta_1 + \beta_3 \times \text{horsepower}_i)\times \text{origin}_i  \\
+&= \beta_0 + \beta_2 \times \text{horsepower}_i +\left\{ \begin{aligned}
+  \beta_1 + \beta_3 \times \text{horsepower}_i\text{  if }i\text{th car is American made}\\
+ 2(\beta_1 + \beta_3 \times \text{horsepower}_i) \text{  if }i\text{th car is European made}\\
+ 3(\beta_1 + \beta_3 \times \text{horsepower}_i)\text{  if }i\text{th car is Japanese made}\\
+\end{aligned} \right.\\
+&=  \left\{ \begin{aligned}
+  \beta_0 + \beta_1 + (\beta_2 + \beta_3) \times \text{horsepower}_i\text{  if }i\text{th car is American made}\\
+ \beta_0 + 2\beta_1 + (\beta_2 + 2\beta_3) \times \text{horsepower}_i) \text{  if }i\text{th car is European made}\\
+ \beta_0 + 3\beta_1 +(\beta_2 + 3\beta_3) \times \text{horsepower}_i)\text{  if }i\text{th car is Japanese made}\\
+\end{aligned} \right.
 \end{aligned}
 $$
 
-Hence, we see that, with one unit increase in horsepower $\Delta mpg$
+Hence, we see that, with one unit increase in horsepower, the mpg for
+    - Japanese car changes by -0.2495693.      
+    - American car changes by -0.1227999. 
+    - European car changes by -0.1861846.
 
 ## 4.
 
@@ -196,11 +207,11 @@ Y &= \beta_0 + \beta_1X_1 + \varepsilon\\
 \hat Y &= \hat\beta_0 + \hat\beta_1X_1\\
 \hat Y &= -165.1 + 4.8X_1\\
 \text{Given that } X_1 &= 64,\\
-\hat Y &= 146.9
+\hat Y &= 142.1
 \end{align*}
 
 
-Hence, the weight I predict for an individual who is 64 inches tall is 146.9.
+Hence, the weight I predict for an individual who is 64 inches tall is `r -165.1 + 4.8*64`.
 
 ### b.
 
@@ -231,27 +242,51 @@ We want to minimize RSS s.t.
 
 
 \begin{align*}
-RSS = 0\\
+RSS &= 0\\
 \sum_{i = 1}^n e_i^2 &= 0\\
-\sum_{i = 1}^n (Y - \hat\beta_0 - \hat\beta_1x_{1,i} - \hat\beta_2x_{2,i})^2 &= 0\\
+\sum_{i = 1}^n (Y - \hat\beta_0 - \hat\beta_1X_{1,i} - \hat\beta_2X_{2,i})^2 &= 0\\
+\text{But we know that } X_2 &= \frac{X_1}{12},\\
+\sum_{i = 1}^n (Y - \hat\beta_0 - \hat\beta_1X_{1,i} - \hat\beta_2\frac{X_{1,i}}{12})^2 &= 0\\
+\sum_{i = 1}^n (Y - \hat\beta_0 - (\hat\beta_1+\frac{\hat\beta_2}{12})X_{1,i} )^2 &= 0\\
+\text{If we set} \hat\beta_3 &= \hat\beta_1+\frac{\hat\beta_2}{12}\\
+\sum_{i = 1}^n (Y - \hat\beta_0 - \hat\beta_3X_{1,i} )^2 &= 0\\
 \end{align*}
 
-And we can rewrite it using matrix notation,
-\[Y= X\hat\beta  + \hat e\]
-If we apply OLS to this, that is, choose $\hat\beta$ to minimize the sum of squared residuals. Since $\hat e'\hat e = \sum_{i = 1}^n \hat e_i^2$, our OLS will be 
-\[\text{Minimize } \hat e'\hat e = (Y-X\hat\beta)'(Y-X\hat\beta)\]\[\text{with respect to } \hat\beta\]And the first order condition is 
+
+And the first order conditions are 
+
 
 \begin{align*}
-\frac{\partial\hat e'\hat e}{\partial\hat\beta} = 2(-X')(Y-X\hat\beta) &= 0\\
-X'Y - X'X\hat\beta &= 0\\
-\hat\beta &= (X'X)^{-1}X'Y
+\frac{\partial}{\partial\hat\beta_0} \sum_{i = 1}^n (Y - \hat\beta_0 - \hat\beta_3X_{1,i} )^2 &= 0\\
+-2\sum (Y - \hat\beta_0 - \hat\beta_3X_{1,i} ) &= 0\\
+\sum Y_i - n\hat\beta_0 - \hat\beta_3\sum X_{1,i} &= 0\\
+\sum Y_i &= n\hat\beta_0 + \hat\beta_3\sum X_{1,i}\\
+\bar Y &= \hat\beta_0 + \hat\beta_3 \bar X_1\\
+Y_i - \bar Y &= (X_{1,i} - \bar X )\hat\beta_3 + \hat e_i\\\\
+\text{Let } y_i = Y_i - \bar Y &, x_i = X_i - \bar X\\\\
+y_i &= \hat\beta_3 x_i + \hat e_i\\\\
+\text{Now, we can apply Least Squares}\\
+\frac{\partial}{\partial\hat\beta_3}\sum_{i = 1}^n  (y_i - \hat\beta_3 x_i)^2 &= 0\\
+2\sum(y_i - \hat\beta_3 x_i)(-x_i) &= 0\\
+\sum(x_iy_i - \hat\beta_3 x_i^2) &= 0\\
+\sum x_iy_i - \hat\beta_3 \sum x_i^2 &= 0\\
+\hat\beta_3 &= \frac{\sum x_iy_i}{\sum x_i^2}\\
+\text{Once } \hat\beta_3 \text{ is estimated, we can estimate } &\hat\beta_0\\
+\hat\beta_0 = \bar Y - \bar X_1 \hat\beta_3\\
+\intertext{Since there's collinearity between} X_1, X_2,\\
+\intertext{We can not seperate } \hat\beta_1 \text{ and } \hat\beta_2\\
+\intertext{And can only rely on that } \hat\beta_1 + \frac{\hat\beta_2}{12} = \hat\beta_3
 \end{align*}
+
 
 ### d.
 
-
-Since we know that $X1 = 12X_2$ from part b). Since there's collinearity between$X_1,X_2$.
-And training MSE will be greatest in this case. And remains the same for the rest two since units of measurement does not change the goodness of fit of our model.
+Since we know that $X1 = 12X_2$ from part b). The Structural multicollinearity existed between$X_1,X_2$ will reduce the precision of the estimated coefficients, 
+And testing MSE will be greatest in this case. And remains the same for the rest two since units of measurement does not change the goodness of fit of our model. However,
+for \textbf{training MSE}, they will likely to be the same since we can effectively
+change our part c) regression into $Y + \hat\beta_0 + \hat\beta_3X_{1,i} + e_i = 0$,
+where $\hat\beta_3 = \hat\beta_1 + \frac{\hat\beta_2}{12}$. Thus, it will give us
+the same result as the other two, hence they share the same \textbf{training MSE}.
 
 
 ## 5.
@@ -467,6 +502,15 @@ lines(x_red_green, y_red_green) # Red Green
 lines(x_red_blue, y_red_blue) # Red Blue
 lines(x_green_blue, y_green_blue) # Blue Green
 
+polygon(x = c(0, 4.5, 12, 12), 
+        y = c(0, 12, 12, -3.5),
+        col = rgb(127/255, 1, 212/255, alpha = 0.3))
+polygon(x = c(-8, -8, 4.5, 0), 
+        y = c(-1.05, 12, 12, 0),
+        col = rgb(0, 150/255, 1, alpha = 0.3))
+polygon(x = c(-8, -8, 0, 12, 12), 
+        y = c(-12, -1.05,0, -3.5, -12),
+        col = rgb(1, 87/255, 51/255, alpha = 0.3))
 
 ```
 
@@ -481,16 +525,19 @@ train <- tibble(
 
 train <- data.frame(train)
 train_lda <- lda(class ~ ., data = train)
-grid <- seq(-10, 20,length = 1000)
+grid <- seq(-10, 20,length = 200)
 grid_2d <- expand.grid(X1=grid, X2=grid)
 grid_pred_lda <- as.numeric(predict(train_lda, newdata=grid_2d)$class)
-grid_pred_lda <- matrix(grid_pred_lda, ncol = 1000)
+grid_pred_lda <- matrix(grid_pred_lda, ncol = 200)
 contour(grid, grid, grid_pred_lda, 
-        xlim = c(-6, 10), ylim = c(-10, 10),
+        xlim = c(-6, 10), ylim = c(-9, 10),
         drawlabels = F, lty = 1, col = "black",
         main = "LDA Decision Boundary")
 points(train[, 1], train[, 2], col = train$class,
        pch = 16)
+points(grid_2d, pch=".", cex=1.2, col=ifelse(grid_pred_lda == 3, 2,
+                                             ifelse(grid_pred_lda == 2, 3, 4)))
+
 ```
 
 When I compare the LDA Boundary to the Bayes one, I would say they are pretty similar.
@@ -546,16 +593,19 @@ $$
 ### a.
 ```{r}
 train_qda <- qda(class ~ ., data = train)
-grid <- seq(-10, 20,length = 1000)
+grid <- seq(-10, 12,length = 200)
 grid_2d <- expand.grid(X1=grid, X2=grid)
 grid_pred_qda <- as.numeric(predict(train_qda, newdata=grid_2d)$class)
-grid_pred_qda <- matrix(grid_pred_qda, ncol = 1000)
+grid_pred_qda <- matrix(grid_pred_qda, ncol = 200)
 contour(grid, grid, grid_pred_qda, 
-        xlim = c(-6, 10), ylim = c(-10, 10),
+        xlim = c(-6, 10), ylim = c(-9, 10),
         drawlabels = F, lty = 1, col = "black",
         main = "QDA Decision Boundary")
 points(train[, 1], train[, 2], col = train$class,
        pch = 16)
+points(grid_2d, pch=".", cex=1.2, col=ifelse(grid_pred_qda == 3, 2,
+                                             ifelse(grid_pred_qda == 2, 3, 4)))
+
 ```
 
 ### b.
@@ -609,7 +659,22 @@ it tends to have less training error. And that "overfitting" result in QDA have 
 Testing Error than the LDA.
 
 
-## 9.
+## 9. Extra Credits
 
+We can use the linear algebra approach to solve this, that is, we can first convert
+the equation into the form of matrices.
+
+Let $Y = [y_1 \ y_2 \ y_3 \ ... y_n]^T$, $\beta = [\beta_0 \ \beta_1 \ \beta_2 \ \beta_3 \ ... \beta_n]^T$.$X = \begin{bmatrix} 1 & x_{11} &... & x_{1p}\\ 1 & x_{21} & ... & x_{2p}\\...&...&...&...\\ 1 & x_{n1} &... & x_{np}\end{bmatrix}$ And $\lambda = I\lambda$.
+
+
+\begin{align*}
+\frac{\partial}{\partial \beta}\sum_{i = 1}^n(y_i -(\beta_0 + \beta_1x_{i1} + ... + \beta_px_{ip}))^2 + \lambda(\beta_1^2 + ... + \beta_p^2) &= 0\\
+\frac{\partial}{\partial \beta}(Y - X\beta)^T(Y - X\beta) + \lambda I\beta^T\beta &= 0\\
+-2X^T(Y - X\beta) + 2\lambda I\beta &= 0\\
+X^T(Y - X\beta) - \lambda I\beta &= 0\\
+X^TY - X^TX\beta - \lambda I\beta &= 0\\
+\beta (X^TX + \lambda I) &= X^TY\\
+\hat\beta &= (X^TX + \lambda I)^{-1}X^TY
+\end{align*}
 
 
