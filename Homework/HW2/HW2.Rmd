@@ -8,8 +8,9 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
+library(MASS)
 library(ISLR2)
-library(matlib)
+library(knitr)
 ```
 
 ## 1.
@@ -42,7 +43,7 @@ The mileage my model predict for the given car is `r prediction_1[1]`.
 
 ### d.
 
-```{r ex1c}
+```{r ex1d}
 mpg_origin <- data.frame(
   mpg = predict(lm_1),
   origin = Auto$origin
@@ -99,7 +100,7 @@ y_i = \beta_0 + \beta_1x_{i1} + \beta_{2}x_{i2} + \varepsilon_i = \left\{\begin{
 \right.
 $$
 
-```{r ex2a}
+```{r ex2b}
 Auto_new <- Auto %>%
   mutate("Japanese" = 1, "European" = 1)
 
@@ -180,7 +181,8 @@ $$
 \end{aligned} \right. 
 \end{aligned}
 $$
-Hence, we see that, with one unit increase in horsepower $\Delta \text{mpg} = $
+
+Hence, we see that, with one unit increase in horsepower $\Delta mpg$
 
 ## 4.
 
@@ -219,22 +221,21 @@ for 5.333 feet tall is $\hat Y = -165.1 + 57.6 \cdot 5.333 = 142.0808$.
 ### c.
 
 
-$$
+
 \begin{align*}
 Y &= \beta_0 + \beta_1 X_1 + \beta_2X_2 + \varepsilon \\
 Y &= \hat \beta_0 + \hat\beta_1 X_1 + \hat\beta_2X_2 + \hat e
 \end{align*}
-$$
+
 We want to minimize RSS s.t.
 
-$$
+
 \begin{align*}
 RSS = 0\\
 \sum_{i = 1}^n e_i^2 &= 0\\
 \sum_{i = 1}^n (Y - \hat\beta_0 - \hat\beta_1x_{1,i} - \hat\beta_2x_{2,i})^2 &= 0\\
-
 \end{align*}
-$$
+
 And we can rewrite it using matrix notation,
 \[Y= X\hat\beta  + \hat e\]
 If we apply OLS to this, that is, choose $\hat\beta$ to minimize the sum of squared residuals. Since $\hat e'\hat e = \sum_{i = 1}^n \hat e_i^2$, our OLS will be 
@@ -255,29 +256,33 @@ And training MSE will be greatest in this case. And remains the same for the res
 
 ## 5.
 
-$$
+
 \begin{align*}
 P(Y = 1 | X = x) &= P(Y = 2 | X = x) \\
 \frac{\pi_1f_1(x)}{\pi_1f_1(x)+\pi_2f_2(x)} &= \frac{\pi_2f_2(x)}{\pi_1f_1(x)+\pi_2f_2(x)}\\
 \pi_1f_1(x) &= \pi_2f_2(x)\\
 \pi_1 \frac1{\sigma\sqrt{2\pi}}e^{-\frac12(\frac{x - \mu}{\sigma})^2}&= \frac14\pi_2
 \end{align*}
-$$
+
 ### b.
 
 Since we are now given the values for parameters, we can plug it in our decision
 boundary formula and see that, when $P(Y = 1 | X = x) \geqslant P(Y = 2 | X = x)$,
 we would classify it as Class one, and vice versa for class two. 
 
-$$
+
 \begin{align*}
 P(Y = 1 | X = x) &\geqslant P(Y = 2 | X = x) \\
 0.45 \cdot \frac1{2.506628}e^{-\frac{x^2}{2}} &\geqslant \frac14\cdot 0.55\\
 |x| &\leqslant 0.7303212
 \end{align*}
-$$
+
 Hence, when $x$ is in between $\pm 0.7303212$. We would classify it as Class 1, and 
-classify it to Class 2 elsewhere.
+classify it to Class 2 elsewhere. However, if we look the other way around, we can 
+see that if $|x|> 2$, $P(Y = 2\Big| |x| > 2) = 0$. Hence, we would add the critera
+so that if $|x| > 2$ or $|x| \leqslant 0.7303212$, we would classify it as Class 1,
+other wise, we would classify it as Class 2.
+
 
 ```{r}
 x_base <- seq(-5, 5, by = 0.01)
@@ -287,9 +292,12 @@ plot(x_base, dnorm(x_base,0,1), type = "l",
 lines(x_base, dunif(x_base, min = -2, max = 2))
 abline(v = 0.7303212)
 abline(v = -0.7303212)
-rect(-5,0,-0.7303212,0.5,density = 2, col = "red")
-rect(0.7303212,0,5,0.5,density = 2, col = "red")
+rect(-2,0,-0.7303212,0.5,density = 2, col = "red")
+rect(0.7303212,0,2,0.5,density = 2, col = "red")
 rect(-0.7303212,0,0.7303212,0.5,density = 2, col = "blue")
+rect(-5,0,-2,0.5,density = 2, col = "blue")
+rect(2,0,5,0.5,density = 2, col = "blue")
+
 legend("topright",
        c("Class 1","Class 2"),
        col = c("blue","red"),
@@ -298,28 +306,28 @@ legend("topright",
 ### c.
 
 We can estimate these by 
-$$
+
 \begin{align*}
 \hat \mu_1 &= \frac1{n_1} \sum_{i: y_i = 1} x_i\\
 \hat \pi_1 &= \frac{n_1}{n_1 + n_2}\\
 \hat \sigma_1 &= \frac1{n - 1} \sum_{k = 1}^2 \sum_{i : y_i = k}(x_i - \hat\mu_1)^2
 \end{align*}
-$$
+
 
 ### d.
 
-$$
+
 \begin{align*}
 P(Y = 1 | X = x_0) &= \frac{\hat\pi_1\hat f_1(x_0)}{\hat \pi_1 \hat f_1(x_0)+ \hat\pi_2 \hat f_2(x_0)} \\
 &= \frac{\hat \pi_1 \frac1{\hat\sigma\sqrt{2\pi}}e^{-\frac12(\frac{x_0 - \hat\mu}{\hat\sigma})^2}}{\hat \pi_1 \frac1{\hat\sigma\sqrt{2\pi}}e^{-\frac12(\frac{x_0 - \hat\mu}{\hat\sigma})^2}+ \frac14\hat\pi_2}\\
 \end{align*}
-$$
+
 
 ## 6.
 
 ### a.
 
-$$
+
 \begin{align*}
 \log\left[\frac{p(x)}{1 - p(x)}\right] &= 0.7\\
 \beta_0 + \beta_1x_1 +...+ \beta_px_p &= 0.7\\
@@ -328,12 +336,12 @@ P(Y = 1|X  = x)&= \frac{\exp(\beta_0 + \beta_1x_1 +...+ \beta_px_p)}{1 + \exp(\b
 &= \frac{\exp(0.7)}{1 + \exp(0.7)}\\
 &= 0.6682
 \end{align*}
-$$
+
 
 
 ### b.
 
-$$
+
 \begin{align*}
 P(Y = 1| X = x^*) &= \frac{\exp\left(\beta_0 + \beta_1x_1^* + \beta_2x_2^* +... +\beta_px_p^*\right)}{1 + \exp\left(\beta_0 + \beta_1x_1^* + \beta_2x_2^* +... +\beta_px_p^*\right)}\\
 \text{and it's odds equals}\\
@@ -342,7 +350,7 @@ odds &= \beta_0 + \beta_1(x_1 + 1) + \beta_2(x_2 -1) + \beta_3(x_3 + 2) + ... + 
 &= 0.7 + \beta_1 -\beta_2 + 2\beta_3\\
 P(Y = 1| X = x^*) &= \frac{\exp(0.7 + \beta_1 -\beta_2 + 2\beta_3)}{1 + \exp(0.7 + \beta_1 -\beta_2 + 2\beta_3)}
 \end{align*}
-$$
+
 
 ## 7.
 
@@ -365,10 +373,10 @@ mu1 <- matrix(c(0, -2), 2, 1)
 mu2 <- matrix(c(4, 4), 2, 1)
 mu3 <- matrix(c(-2, 5), 2, 1)
 
-sigma <- matrix(c(4, 4.2, 4.2, 9), 2, 2)
+sigma <- matrix(c(4, 0, 0, 9), 2, 2)
 ```
 
-My choice for $\mu_1 = \begin{bmatrix}0\\-2\end{bmatrix}; \mu_2 = \begin{bmatrix}4\\4\end{bmatrix}; \mu_3 = \begin{bmatrix}-2\\5\end{bmatrix}$. And $\sum = \begin{bmatrix}4 & 4.2\\4.2 & 9\\ \end{bmatrix}$.
+My choice for $\mu_1 = \begin{bmatrix}0\\-2\end{bmatrix}; \mu_2 = \begin{bmatrix}4\\4\end{bmatrix}; \mu_3 = \begin{bmatrix}-2\\5\end{bmatrix}$. And $\sum = \begin{bmatrix}4 & 0\\0 & 9\\ \end{bmatrix}$.
 
 ### b.
 
@@ -382,19 +390,226 @@ plot(class_1$X1, class_1$X2,
      ylab = "X2")
 points(class_2$X1, class_2$X2, col = "green", pch = 16)
 points(class_3$X1, class_3$X2, col = "blue", pch = 16)
-
 # Calculate Bayes Devision Boundary
 ```
 
-And for the decision boundary, we have to calculate the below function: 
+And for the Bayes decision boundary, we have to calculate the below function: 
 
-$$
+
 \begin{align*}
 X^T\Sigma^{-1}\mu_k - \frac12\mu_k^T\Sigma^{-1}\mu_k &= X^T\Sigma^{-1}\mu_l - \frac12\mu_l^T\Sigma^{-1}\mu_l \;\;\forall k \neq l\\
-X^T\Sigma^{-1}\mu_k - X^T\Sigma^{-1}\mu_l &= \\
+X^T (\Sigma^{-1}\mu_k - X^T\Sigma^{-1}\mu_l) &= \frac12\mu_k^T\Sigma^{-1}\mu_k - \frac12\mu_l^T\Sigma^{-1}\mu_l\\
+X^T (\Sigma^{-1}\mu_k -\Sigma^{-1}\mu_l) &= \frac12(\mu_k^T\Sigma^{-1}\mu_k - \mu_l^T\Sigma^{-1}\mu_l)\\
+X^T &= \frac12(\mu_k^T\Sigma^{-1}\mu_k - \mu_l^T\Sigma^{-1}\mu_l)(\Sigma^{-1}\mu_k -\Sigma^{-1}\mu_l)^{-1}\\
+X &= \frac12\left((\mu_k^T\Sigma^{-1}\mu_k - \mu_l^T\Sigma^{-1}\mu_l)(\Sigma^{-1}\mu_k -\Sigma^{-1}\mu_l)^{-1}\right)^T
 \end{align*}
-$$
+
+However, since that $\Sigma^{-1}\mu_k -\Sigma^{-1}\mu_l$ is a $2 \times 1$ matrix,
+it can not be inverted. And we would use
+
+
+
+\[X^T(\Sigma^{-1}\mu_k -\Sigma^{-1}\mu_l) = \frac12(\mu_k^T\Sigma^{-1}\mu_k - \mu_l^T\Sigma^{-1}\mu_l)\]
+
+
+to solve for $X$. And let 
+
+
+\begin{align*}
+A &= \Sigma^{-1}\mu_k -\Sigma^{-1}\mu_l\\
+b &= \frac12(\mu_k^T\Sigma^{-1}\mu_k - \mu_l^T\Sigma^{-1}\mu_l)\\
+\text{Thus, } X^TA &= b
+\end{align*}
+
 ```{r}
-C1 %*% solve(sigma) %*% mu1 - as.numeric(0.5 %*% t(mu1) %*% solve(sigma) %*% mu1)
+A <- sigma %*% mu1 - sigma %*% mu2
+b <- 0.5 * (t(mu1) %*% solve(sigma) %*% mu1 - t(mu2) %*% solve(sigma) %*% mu2)
 ```
+Hence, we have
+$$
+\begin{bmatrix}X_1 & X_2\end{bmatrix}\begin{bmatrix}-41.2 \\ -70.8\end{bmatrix} = -1.568627
+$$
+So, we have $-41.2X_1 - 70.8X_2 + 1.568627 = 0$.
+And we can repeat the process for other decisions.
+
+```{r other_boundaries}
+A <- sigma %*% mu2 - sigma %*% mu3
+b <- 0.5 * (t(mu2) %*% solve(sigma) %*% mu2 - t(mu3) %*% solve(sigma) %*% mu3)
+slope <- -1 *A[1]/A[2]
+intersect <- b/A[2]
+slope
+intersect
+```
+
+And we can plot this as:
+
+
+```{r}
+x_red_green <- seq(0, 100, by = 0.001)
+x_red_blue <- seq(-10, 0.1, by = 0.01)
+x_green_blue <- seq(0, 100, by = 0.01)
+
+y_red_green <- -0.2962963*x_red_green + 0.04938272
+y_red_blue <- 0.1269841*x_red_blue + 0.02645503
+y_green_blue <- 2.666667*x_green_blue - 0.1111111
+
+plot(class_1$X1, class_1$X2,
+     col = "red",
+     pch = 16,
+     xlim = c(-6, 10),
+     ylim = c(-10,10),
+     xlab = "X1",
+     ylab = "X2",
+     main = "Bayes Decision Boundary")
+points(class_2$X1, class_2$X2, col = "green", pch = 16)
+points(class_3$X1, class_3$X2, col = "blue", pch = 16)
+lines(x_red_green, y_red_green) # Red Green
+lines(x_red_blue, y_red_blue) # Red Blue
+lines(x_green_blue, y_green_blue) # Blue Green
+
+
+```
+
+### d.
+To get the LDA Decision Boundary, we can try to 
+```{r}
+train <- tibble(
+  X1 = c(class_1$X1, class_2$X1, class_3$X1),
+  X2 = c(class_1$X2, class_2$X2, class_3$X2),
+  class = c(rep("red", 50), rep("green", 50), rep("blue", 50))
+)
+
+train <- data.frame(train)
+train_lda <- lda(class ~ ., data = train)
+grid <- seq(-10, 20,length = 1000)
+grid_2d <- expand.grid(X1=grid, X2=grid)
+grid_pred_lda <- as.numeric(predict(train_lda, newdata=grid_2d)$class)
+grid_pred_lda <- matrix(grid_pred_lda, ncol = 1000)
+contour(grid, grid, grid_pred_lda, 
+        xlim = c(-6, 10), ylim = c(-10, 10),
+        drawlabels = F, lty = 1, col = "black",
+        main = "LDA Decision Boundary")
+points(train[, 1], train[, 2], col = train$class,
+       pch = 16)
+```
+
+When I compare the LDA Boundary to the Bayes one, I would say they are pretty similar.
+
+
+### d.
+
+```{r 7d}
+# Plot the Confusion Matrix for LDA
+table(predict(train_lda,type="class")$class, train$class)
+
+training_error_lda <- mean(predict(train_lda,type="class")$class != train$class)
+```
+
+The Training Error is `r training_error_lda`.
+
+
+### e.
+
+```{r 7e}
+test_class_1 <- data.frame(X1 = rnorm(n, 0, 2), X2 = rnorm(n, -2, 3))
+test_class_2 <- data.frame(X1 = rnorm(n, 4, 2), X2 = rnorm(n, 4, 3))
+test_class_3 <- data.frame(X1 = rnorm(n, -2, 2), X2 = rnorm(n, 5, 3))
+
+test <- tibble(
+  X1 = c(test_class_1$X1, test_class_2$X1, test_class_3$X1),
+  X2 = c(test_class_1$X2, test_class_2$X2, test_class_3$X2),
+  class = c(rep("red", 50), rep("green", 50), rep("blue", 50))
+)
+
+test <- data.frame(test)
+test_lda <- predict(train_lda, newdata = test)
+table(test_lda$class, test$class)
+testing_error_lda <- mean(test_lda$class != test$class)
+```
+And our Test Error is `r testing_error_lda`.
+
+### f.
+
+
+And the difference between the training and testing error is caused by  the irreducible error term, since just like other Statistical Learning Methods, LDA is trying to minimize
+the Reducible Error term. And the difference between these two error term would
+cancel out the reducible error term, since we have the same model, and the difference
+can only be caused by the irreducible error term, that is, the randomness in our dataset.
+
+$$
+\text{Error} = \text{Reducible Error} + \text{Irreducible Error}
+$$
+
+
+## 8.
+
+### a.
+```{r}
+train_qda <- qda(class ~ ., data = train)
+grid <- seq(-10, 20,length = 1000)
+grid_2d <- expand.grid(X1=grid, X2=grid)
+grid_pred_qda <- as.numeric(predict(train_qda, newdata=grid_2d)$class)
+grid_pred_qda <- matrix(grid_pred_qda, ncol = 1000)
+contour(grid, grid, grid_pred_qda, 
+        xlim = c(-6, 10), ylim = c(-10, 10),
+        drawlabels = F, lty = 1, col = "black",
+        main = "QDA Decision Boundary")
+points(train[, 1], train[, 2], col = train$class,
+       pch = 16)
+```
+
+### b.
+
+```{r 8b}
+table(predict(train_qda,type="class")$class, train$class)
+
+training_error_qda <- mean(predict(train_qda,type="class")$class != train$class)
+
+```
+
+This time, the training error is `r training_error_qda`.
+
+### c.
+
+```{r 8c}
+test_qda <- predict(train_qda, newdata = test)
+table(test_qda$class, test$class)
+testing_error_qda <- mean(test_qda$class != test$class)
+```
+
+This time, the testing error is `r testing_error_qda`.
+
+### d.
+
+And the difference between the training and testing error is caused by  the irreducible error term, since just like other Statistical Learning Methods, QDA is trying to minimize
+the Reducible Error term. And the difference between these two error term would
+cancel out the reducible error term, since we have the same model, and the difference
+can only be caused by the irreducible error term, that is, the randomness in our dataset.
+
+$$
+\text{Error} = \text{Reducible Error} + \text{Irreducible Error}
+$$
+
+### e & f.
+
+```{r ex8f}
+kable(tibble(
+  " " = c("LDA", "QDA"),
+  "Test Error" = c(testing_error_lda, testing_error_qda),
+  "Train Error" = c(training_error_lda, training_error_qda),
+))
+```
+
+We can see from the above Table that, in my case, LDA has lower Test Error, and QDA
+has lower training error. The reason for that is with to do with flexibility of our 
+methods of approach. Since the involvement of Quadratic terms, QDA would have more
+flexibility than LDA. Thus it might overfit the data and cause it to fit "too hard"
+to a point that it involves some of the irreducible error as part of the fitting. Hence
+it tends to have less training error. And that "overfitting" result in QDA have higher
+Testing Error than the LDA.
+
+
+## 9.
+
+
 
