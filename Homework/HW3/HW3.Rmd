@@ -1,0 +1,83 @@
+---
+title: "HW3"
+author: "Peiran Chen"
+date: "4/30/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1.
+
+### a.
+
+```{r ex1a}
+y <- rnorm(100)
+y_test <- rnorm(100)
+x <- matrix(rnorm(10000*100), ncol=10000)
+
+lm_1a <- lm(y ~ x)
+```
+
+In matrix form, we could rewrite our expression as:
+
+
+\begin{align*}
+Y &= \beta_0 + \beta_1 X_1 + \beta_2X_2 + .... + \beta_{10000}X_{10000} + \varepsilon, \text{ where } \varepsilon \sim N(0,1) \\
+Y &= \beta X + \varepsilon \\  
+\intertext{And Least Squares will give us}\\  
+\hat Y &= \beta X + \varepsilon\\
+\intertext{Hence, it's MSE is}\\
+MSE &= E[Y - \hat Y]^2\\
+&= Var[\varepsilon] + Bias^2[\hat f(x_0)] + Var[\hat f(x_0)]
+\end{align*}
+
+
+As we can see, that $Var[\varepsilon]$ is irreducible, because it exists in nature,
+and we know that the least squares method derives by setting 
+
+```{r}
+(MSE <- mean(lm_1a$residuals^2))
+```
+
+Since both 
+
+### b.
+
+```{r ex1b}
+fc <- rep(0, 100)
+
+bias_sq <- sum((fc - y)^2)
+(bias <- sqrt(bias_sq))
+```
+
+Thus, we have the bias is equal to `r bias`.
+
+
+### c.
+
+```{r}
+(variance <- (sd(fc))^2)
+```
+
+Thus, the variance for this procedure is `r variance`.
+
+### d.
+
+
+## 2.
+
+
+## 3.
+
+
+## 4.
+
+### a.
+
+```{r}
+
+```
+
