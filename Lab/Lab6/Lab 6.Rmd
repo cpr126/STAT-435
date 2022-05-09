@@ -1,0 +1,427 @@
+---
+title: "An R Markdown document converted "
+output:
+  pdf_document: default
+  html_document: default
+---
+
+# Lab 6
+- Best subset selection, forward/backword selection
+- Ridge regression
+- Lasso
+
+## Generate the data
+- Dataset size $n = 500$ 
+- Generate 20 predictors $X_1, X_2, \ldots, X_{20}$ and $X_i \sim N(0, 1)$ for $i = 1, \ldots, 20$. 
+- $Y = X_1 + X_2 + X_3 + X_4 + X_5 + \epsilon$ with $\epsilon \sim N(0, 1)$
+
+```{r}
+set.seed(1)
+n = 500
+p = 20
+x = matrix(rnorm(n * p), nrow=n, ncol=p)
+y = x[, 1] + x[, 2] + x[, 3] + x[, 4] + x[, 5] + rnorm(n)
+```
+
+```{r}
+head(x)
+```
+
+```{r}
+dim(x)
+```
+
+```{r}
+simulated_data = data.frame(x, y)
+```
+
+```{r}
+head(simulated_data)
+```
+
+## Fit a linear regression
+
+```{r}
+lm_fit <- lm(y ~ ., data=simulated_data)
+```
+
+```{r}
+summary(lm_fit)
+```
+
+## Looks like least squares have already done a decent job. 
+
+## Let's try best subset selection first.
+
+```{r}
+library(leaps)
+```
+
+- `regsubsets` function performs best subset selection by identifying the best model that contains a given number of predictors, where *best* is quantified using RSS. 
+- `summary` command outputs the best set of variables for each model size
+
+```{r}
+regfit.full <- regsubsets(y ~ ., data=simulated_data)
+```
+
+```{r}
+summary(regfit.full)
+```
+
+`nvmax` option can be used to set the number of variables considered by the best subset selection method.
+
+```{r}
+regfit.full = regsubsets(y ~ ., data=simulated_data, nvmax=20)
+```
+
+```{r}
+reg.summary <- summary(regfit.full)
+```
+
+```{r}
+names(reg.summary)
+```
+
+```{r}
+round(reg.summary$rsq, 3)
+```
+
+## Can we use R-squared/RSS to select among models with different number of predictors?
+## What metric can we use to select different models?
+- AIC/BIC
+- Cp
+- Adjusted R squared
+
+```{r}
+par(mfrow=c(2, 2))
+plot(reg.summary$rss, xlab="Number of variables", ylab = "RSS", type="l")
+
+plot(reg.summary$adjr2, xlab="Number of variables", ylab= "Adjusted Rsq", type="l")
+which.max(reg.summary$adjr2)
+points(7, reg.summary$adjr2[7], col="red", cex=2, pch=20)
+
+plot(reg.summary$cp, xlab="Number of variables", ylab= "Cp", type="l")
+which.min(reg.summary$cp)
+points(6, reg.summary$cp[7], col="red", cex=2, pch=20)
+
+plot(reg.summary$bic, xlab="Number of variables", ylab= "bic", type="l")
+which.min(reg.summary$bic)
+points(5, reg.summary$bic[7], col="red", cex=2, pch=20)
+```
+
+## Recall that BIC prefers simpler model
+
+```{r}
+coef(regfit.full, 6)
+```
+
+## Forward and backward stepwise selection
+- `regsubsets` function can also be used for forward and backward selection.
+- Set argument `method="forward"` or `method="backward"`
+
+```{r}
+regfit.fwd <- regsubsets(y ~ ., data = simulated_data, nvmax = 20, method="forward")
+
+regfit.bwd <- regsubsets(y ~ ., data = simulated_data, nvmax = 20, method="backward")
+
+summary(regfit.bwd)
+```
+
+## Compare the results of best subset selection and forward selection
+
+```{r}
+coef(regfit.full, 6)
+```
+
+```{r}
+coef(regfit.fwd, 6)
+```
+
+## Recall that Cp, BIC, adjusted R-squared are all indirect estimates of test error
+## We can also use cross validation to directly estimate test errors and select variables
+
+- For cross validation, we need to perform both variable selection and also estimate the test error.
+- We should only use **training dataset** for both the variables selections and model fitting. 
+- If full data is being used to select variables, the validation set errors and cross-validation errors will not be accurate estimates of the test errors.
+
+```{r}
+set.seed(123)
+train <- sample(c(TRUE, FALSE), n, replace=T)
+test <- !train
+```
+
+```{r}
+regfit.best <- regsubsets(y ~ ., data=simulated_data, nvmax=20)
+```
+
+## We now compute the validation set error for the best model of each model size
+- We first need to make a model matrix from the test set.
+- meaning that we want to make an "X" matrix for the model.
+- Use `model.matrix` function to extract the model matrix from a formula and dataset.
+
+```{r}
+test.mat <- model.matrix(y ~ ., data = simulated_data[test, ])
+```
+
+```{r}
+head(test.mat)
+```
+
+```{r}
+dim(test.mat)
+```
+
+```{r}
+val.errors <- rep(0, 20)
+for (i in 1:20) {
+    coefi <- coef(regfit.best, id=i)
+    pred <- test.mat[, names(coefi)] %*% coefi
+    val.errors[i] <- mean((simulated_data$y[test] - pred)^2)
+}
+```
+
+```{r}
+round(val.errors, 3)
+```
+
+```{r}
+which.min(val.errors)
+```
+
+```{r}
+predict.regsubsets <- function(objects, newdata, id, ...) {
+    form <- as.formula(objects$call[[2]])
+    mat <- model.matrix(form, newdata)
+    coefi <- coef(objects, id=id)
+    xvars <- names(coefi)
+    mat[, xvars] %*% coefi
+}
+```
+
+## Let's try 10-fold cross validation
+
+```{r}
+k <- 10
+set.seed(1)
+folds <- sample(rep(1:k, length=n))
+cv.errors <- matrix(NA, k, 20)
+```
+
+```{r}
+length(which(folds == 8))
+```
+
+```{r}
+for (j in 1:k) {
+    best.fit <- regsubsets(y ~ ., data=simulated_data[folds != j, ], nvmax=20)
+    for (i in 1:20) {
+        pred <- predict(best.fit, simulated_data[folds == j, ], id=i)
+        cv.errors[j, i] <- mean((simulated_data$y[folds == j] - pred)^2)
+    }
+}
+```
+
+```{r}
+mean.cv.errors <- apply(cv.errors, 2, mean)
+```
+
+```{r}
+round(mean.cv.errors, 3)
+```
+
+```{r}
+which.min(mean.cv.errors)
+```
+
+## Next we can perform best subset selection on the full dataset to get the 5-variable model.
+- It is important that we make use of the full data set in order to obtain more accurate coefficient estimates.
+
+```{r}
+reg.best.full <- regsubsets(y ~., data=simulated_data, nvmax=5)
+```
+
+```{r}
+coef(reg.best.full, 5)
+```
+
+## Ridge regression and Lasso
+- We will use the package `glmnet` to perform ridge regression and lasso.
+- The main function is also called `glmnet`. 
+- So far we have been using the formula syntax `y ~ x`. For `glmnet` function, we pass in a `x` matrix and `y` vector.
+
+```{r}
+library(glmnet)
+```
+
+```{r}
+set.seed(1)
+n = 100
+p = 200
+x = matrix(rnorm(n * p), nrow=n, ncol=p)
+y = x[, 1] + x[, 2] + x[, 3] + x[, 4] + x[, 5] + rnorm(n)
+```
+
+### Ridge regression
+- `glmnet` function has an `alpha` argument that determines what type of model is fit
+- `alpha = 0` means that a ridge regression model is fit
+- `alpha = 1` means that a lasso model is fit.
+
+```{r}
+grid <- 10^seq(10, -2, length=100)
+ridge.mod <- glmnet(x, y, alpha=0, lambda=grid)
+```
+
+### By default, `glmnet` function performs ridge regression for an automatically selected range of $\lambda$ values. Here, we choose a grid of values ranging from $\lambda = 10^{10}$ to $\lambda = 10^{-2}$. 
+
+```{r}
+ridge.mod
+```
+
+### To extract the coefficient estimates, it is stored in a matrix that can be accessed by function `coef`.
+
+```{r}
+dim(coef(ridge.mod))
+```
+
+```{r}
+coef(ridge.mod)[, 80]
+```
+
+### Plot the coefficient path
+
+```{r}
+plot(ridge.mod, xvar="lambda")
+```
+
+### Use validation set approach to estimate test error
+
+```{r}
+set.seed(123)
+train <- sample(c(TRUE, FALSE), n, replace=T)
+test <- !train
+```
+
+```{r}
+ridge.mod <- glmnet(x[train,], y[train], alpha=0, lambda=grid)
+ridge.pred <- predict(ridge.mod, newx = x[test, ])
+```
+
+```{r}
+dim(ridge.pred)
+```
+
+```{r}
+ridge.pred <- predict(ridge.mod, s = 2, newx=x[test, ])
+```
+
+```{r}
+mean((ridge.pred - y[test])^2)
+```
+
+### Cross validation to estimate test error
+- Use a built-in cross validation function, `cv.glmnet`. 
+- By default, this function performs ten-fold cross validation, the number of folds $K$ can be changed with arguments `nfolds`.
+
+```{r}
+set.seed(1)
+cv.out <- cv.glmnet(x, y, alpha=0)
+plot(cv.out)
+```
+
+```{r}
+names(cv.out)
+```
+
+```{r}
+bestlam <- cv.out$lambda.min
+bestlam
+```
+
+```{r}
+min(cv.out$cvm) # estimated test error
+```
+
+```{r}
+coef(cv.out, s=bestlam)
+```
+
+```{r}
+lasso.mod <- glmnet(x, y, alpha=1, lambda=grid)
+```
+
+```{r}
+plot(lasso.mod, xvar="lambda")
+```
+
+```{r}
+set.seed(1)
+cv.out <- cv.glmnet(x, y, alpha=1)
+```
+
+```{r}
+plot(cv.out)
+```
+
+```{r}
+bestlam <- cv.out$lambda.min
+```
+
+```{r}
+min(cv.out$cvm)
+```
+
+```{r}
+coef(cv.out, s=bestlam)
+```
+
+## Collinearity
+
+```{r}
+library(MASS)
+```
+
+```{r}
+Sigma = matrix(c(1, 0.99, 0.99, 1), ncol=2)
+```
+
+```{r}
+Sigma
+```
+
+```{r}
+set.seed(1)
+n = 500
+x1 = rnorm(n)
+x2 = x1
+```
+
+```{r}
+y = 0.5 + x1 + rnorm(n)
+```
+
+```{r}
+lm_fit <- lm(y ~ x1 + x2)
+```
+
+```{r}
+summary(lm_fit)
+```
+
+```{r}
+ridge_fit <- cv.glmnet(x = cbind(x1, x2), y, alpha=0)
+```
+
+```{r}
+bestlam = ridge_fit$lambda.min
+coef(ridge_fit, s=bestlam)
+```
+
+```{r}
+lasso_fit <- cv.glmnet(x = cbind(x1, x2), y, alpha=1)
+```
+
+```{r}
+bestlam = lasso_fit$lambda.min
+coef(lasso_fit, s=bestlam)
+```
+

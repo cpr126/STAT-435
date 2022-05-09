@@ -7,6 +7,8 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(glmnet)
 ```
 
 ## 1.
@@ -14,8 +16,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ### a.
 
 ```{r ex1a}
+set.seed(123)
 y <- rnorm(100)
-y_test <- rnorm(100)
 x <- matrix(rnorm(10000*100), ncol=10000)
 
 lm_1a <- lm(y ~ x)
@@ -23,55 +25,192 @@ lm_1a <- lm(y ~ x)
 
 In matrix form, we could rewrite our expression as:
 
-
+$$
 \begin{align*}
 Y &= \beta_0 + \beta_1 X_1 + \beta_2X_2 + .... + \beta_{10000}X_{10000} + \varepsilon, \text{ where } \varepsilon \sim N(0,1) \\
 Y &= \beta X + \varepsilon \\  
 \intertext{And Least Squares will give us}\\  
-\hat Y &= \beta X + \varepsilon\\
+\hat Y &= \hat\beta X + \varepsilon\\
 \intertext{Hence, it's MSE is}\\
 MSE &= E[Y - \hat Y]^2\\
 &= Var[\varepsilon] + Bias^2[\hat f(x_0)] + Var[\hat f(x_0)]
 \end{align*}
-
-
-As we can see, that $Var[\varepsilon]$ is irreducible, because it exists in nature,
-and we know that the least squares method derives by setting 
-
-```{r}
-(MSE <- mean(lm_1a$residuals^2))
-```
-
-Since both 
+$$
 
 ### b.
 
-```{r ex1b}
-fc <- rep(0, 100)
-
-bias_sq <- sum((fc - y)^2)
-(bias <- sqrt(bias_sq))
-```
-
-Thus, we have the bias is equal to `r bias`.
+As we can see, that $Var[\varepsilon]$ is irreducible, because it exists in nature,
+and we know that it is caused by the randomness in our $y$, which is just $1$. 
 
 
 ### c.
 
+
+
+
+#### i.
+
+$$
+Bias = \sqrt{\left(E[\hat f(x)] - f(x)\right)^2} = \sqrt{f(x)^2} =f(x)
+$$
+Because we have $f(x) = y \sim N(0,1)$. Thus, we have the Bias is equal to 0.
+
+
+#### ii.
+
 ```{r}
+fc <- rep(0,100)
 (variance <- (sd(fc))^2)
 ```
 
 Thus, the variance for this procedure is `r variance`.
 
+#### iii.
+
+In this case, 
+
+$$
+EPE =  Var[\varepsilon] + Bias^2[\hat f(x_0)] + Var[\hat f(x_0)] = Var[\varepsilon] = 1
+$$
+And our $Bias^2[\hat f(x)] = 0$, and $Var[\hat f(x)] = 0$. And $Var[\varepsilon] = 1$, we have \textbf{EPE} = 1.
+
+#### iv.
+
+With Validation Set Approach, we first scramble the data set into train and validation, and
+then, then, with $\hat f_{\text{train}}(\text{validation} \ x) = 0$. It's 
+\[CV_{VSA} = \frac1n\sum_{i \in \text{validation set}}(\hat f_{\text{train}}(x_i) - y_i)^2 = E[y_i^2] = Var[y_i] + E[y_i]^2 = 1\]. 
+
+
+#### v.
+
+I found out that they do match with each other. And the reason for that is because we have
+set that $\hat f(x) = 0 \ \forall x \in \mathbb{R} $. 
+
 ### d.
+
+```{r, warning = FALSE}
+set.seed(123)
+train <- sample(100, 50)
+train.x <- x[train, ]
+val.x <- x[-train, ]
+
+train.y <- y[train]
+val.y <- y[-train]
+lm_2 <- lm(train.y ~ train.x)
+mean((val.y - predict.lm(lm_2, data.frame(val.x))) ^ 2)
+```
+
+
+### e.
+
+(d) has a smaller estimated Test Error, but higher variance and bias.
 
 
 ## 2.
 
+### a.
+
+```{r}
+hist(cor(x[,c(1:10000)],y))
+
+df <- tibble("index" = c(1:10000),
+             "Correlation" = abs(cor(x[,c(1:10000)],y)))
+
+top_10 <- top_n(df, 10, Correlation)
+```
+
+### b.
+
+```{r}
+set.seed(123)
+train <- sample(100, 50)
+train.x <- x[train, ]
+val.x <- x[-train, ]
+
+train.y <- y[train]
+val.y <- y[-train]
+
+lm_3 <- lm(train.y ~ train.x[,top_10$index])
+mean((val.y - predict.lm(lm_3, data.frame(val.x[,top_10$index]))) ^ 2)
+```
+
+### c.
+```{r}
+set.seed(123)
+train <- sample(100, 50)
+train.x <- x[train, ]
+val.x <- x[-train, ]
+
+train.y <- y[train]
+val.y <- y[-train]
+
+df_new <- tibble("index" = c(1:10000),
+             "Correlation" = cor(train.x[,c(1:10000)],train.y))
+
+top_10_new <- top_n(df_new, 10, Correlation)
+
+lm_4 <- lm(train.y ~ train.x[,top_10_new$index])
+mean((val.y - predict.lm(lm_4, data.frame(val.x[,top_10_new$index]))) ^ 2)
+```
 
 ## 3.
 
+### a.
+
+I choose a data set that is called "Superconductivty Data Data Set". It has $p = 81$ features. And the goal is to use all the features(extracted from the superconductor’s chemical formula) to predict the superconducting critical temperature.
+
+
+### b.
+
+```{r}
+df <- read.csv("train.csv")
+
+set.seed(123)
+# We would first split the data into train & val sets
+train <- sample(21263, 10632)
+
+df_train <- df[train, ]
+df_val <- df[-train, ]
+
+lm_5 <- lm(critical_temp ~.-critical_temp, data = df_train)
+test_error <- mean((df_val$critical_temp - predict.lm(lm_5, df_val[1:81])) ^ 2)
+```
+
+The test error(Test MSE) is `r test_error`. And I first use Validation Set Approach
+to split the data into train/validation set about half and half(10632:10631). Then,
+I perform Least Squares on the training data. And calculate the Test Error using
+validation set data.
+
+### c.
+
+```{r ex3c}
+lambdas <- 10^seq(10, -2, length=100)
+ridge_mod <- glmnet(as.matrix(df_train[1:81]), as.matrix(df_train[82]), alpha = 0, lambda = lambdas)
+
+dim(coef(ridge_mod))
+
+plot(ridge_mod, xvar="lambda")
+```
+
+### d.
+
+```{r}
+smallest <- 1000
+target <- 0
+for (i in lambdas){
+  ridge_pred <- predict(ridge_mod, s = i, newx=as.matrix(df_val[1:81]))
+  error <- mean((ridge_pred - as.matrix(df_val[82]))^2)
+  if (error < smallest){
+    smallest <- error
+    target <- i
+  }
+}
+
+
+
+```
+
+When $\lambda = $
 
 ## 4.
 
