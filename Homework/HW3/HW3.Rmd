@@ -2,13 +2,19 @@
 title: "HW3"
 author: "Peiran Chen"
 date: "4/30/2022"
-output: pdf_document
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(glmnet)
+library(ISLR2)
+library(knitr)
+library(boot)
 ```
 
 ## 1.
@@ -25,17 +31,18 @@ lm_1a <- lm(y ~ x)
 
 In matrix form, we could rewrite our expression as:
 
-$$
+
 \begin{align*}
-Y &= \beta_0 + \beta_1 X_1 + \beta_2X_2 + .... + \beta_{10000}X_{10000} + \varepsilon, \text{ where } \varepsilon \sim N(0,1) \\
+Y_i &= \beta_{0,i} + \beta_{1,i} X_{1,i} + \beta_{2,i}X_{2,i} + .... + \beta_{10000,i}X_{10000,i} + \varepsilon_i, \text{ where } \varepsilon \sim N(0,1) \\
+\intertext{In matrix algebra form, we have:}\\
 Y &= \beta X + \varepsilon \\  
 \intertext{And Least Squares will give us}\\  
-\hat Y &= \hat\beta X + \varepsilon\\
+\hat Y &= \hat\beta X\\
 \intertext{Hence, it's MSE is}\\
 MSE &= E[Y - \hat Y]^2\\
 &= Var[\varepsilon] + Bias^2[\hat f(x_0)] + Var[\hat f(x_0)]
 \end{align*}
-$$
+
 
 ### b.
 
@@ -51,18 +58,21 @@ and we know that it is caused by the randomness in our $y$, which is just $1$.
 #### i.
 
 $$
-Bias = \sqrt{\left(E[\hat f(x)] - f(x)\right)^2} = \sqrt{f(x)^2} =f(x)
+Bias = \sqrt{\left(E[\hat f(x_0)] - f(x_0)\right)^2} = f(x_0) 
 $$
 Because we have $f(x) = y \sim N(0,1)$. Thus, we have the Bias is equal to 0.
 
 
 #### ii.
 
-```{r}
+```{r ex1cii}
 fc <- rep(0,100)
-(variance <- (sd(fc))^2)
+variance <- (sd(fc))^2
 ```
 
+$$
+Var[\hat f(x)] = Var[0] = 0
+$$
 Thus, the variance for this procedure is `r variance`.
 
 #### iii.
@@ -80,15 +90,7 @@ With Validation Set Approach, we first scramble the data set into train and vali
 then, then, with $\hat f_{\text{train}}(\text{validation} \ x) = 0$. It's 
 \[CV_{VSA} = \frac1n\sum_{i \in \text{validation set}}(\hat f_{\text{train}}(x_i) - y_i)^2 = E[y_i^2] = Var[y_i] + E[y_i]^2 = 1\]. 
 
-
-#### v.
-
-I found out that they do match with each other. And the reason for that is because we have
-set that $\hat f(x) = 0 \ \forall x \in \mathbb{R} $. 
-
-### d.
-
-```{r, warning = FALSE}
+```{r ex1iv, warning = FALSE}
 set.seed(123)
 train <- sample(100, 50)
 train.x <- x[train, ]
@@ -97,20 +99,62 @@ val.x <- x[-train, ]
 train.y <- y[train]
 val.y <- y[-train]
 lm_2 <- lm(train.y ~ train.x)
-mean((val.y - predict.lm(lm_2, data.frame(val.x))) ^ 2)
+mean((0 - predict.lm(lm_2, data.frame(val.x)))^2)
+```
+And it is close to our derivation for $CV_{VSA}$.
+
+#### v.
+
+I found out that they do match with each other. And the reason for that is because we have
+set that $$\hat f(x) = 0 \ \forall x \in \mathbb{R} $$. Hence, it will has Variance of 0 and Bias
+of 0.
+
+
+### d.
+
+```{r ex1d, warning = FALSE, message=FALSE}
+set.seed(123)
+train <- sample(100, 50)
+train.x <- x[train, ]
+val.x <- x[-train, ]
+
+train.y <- y[train]
+val.y <- y[-train]
+lm_2 <- lm(train.y ~ train.x)
+mean((val.y - predict.lm(lm_2, data.frame(val.x)))^2)
 ```
 
 
 ### e.
 
-(d) has a smaller estimated Test Error, but higher variance and bias.
+(c) has a smaller Estimated Test Error, along with 0 Bias and 0 Variance, which are
+definitely lower than part (d)'s Bias and Variance. It might seems like that (c) is
+a better choice. And it all comes down to how we generated our data in the first place.
+We generated $y$ and $x$ independently with the same $Normal(0,1)$ distribution,
+so in a perfect setting, their covariance would be
+
+
+\begin{align*}
+Cov[X,Y] &= E[XY]-E[X]E[Y]\\
+&= E[X]E[Y] - E[X]E[Y]\\
+&= 0\\
+\\
+Cor[X, Y] &= \frac{Cov[X, Y]}{\sqrt{Var[X]Var[Y]}}\\
+&= 0
+\end{align*}
+
+
+And we are doing least squares to find relationship on this 0 correlation relationship in (d).
+Hence, (c)'s choice of $\hat f(x) = 0 \forall x$ seems to be a reasonable and good choice.
+And that answers why (c) gives us a lower estimation test error when comparing to (d). And my
+asnwer does support this.
 
 
 ## 2.
 
 ### a.
 
-```{r}
+```{r ex2a}
 hist(cor(x[,c(1:10000)],y))
 
 df <- tibble("index" = c(1:10000),
@@ -121,7 +165,7 @@ top_10 <- top_n(df, 10, Correlation)
 
 ### b.
 
-```{r}
+```{r ex2b}
 set.seed(123)
 train <- sample(100, 50)
 train.x <- x[train, ]
@@ -135,7 +179,7 @@ mean((val.y - predict.lm(lm_3, data.frame(val.x[,top_10$index]))) ^ 2)
 ```
 
 ### c.
-```{r}
+```{r ex2c}
 set.seed(123)
 train <- sample(100, 50)
 train.x <- x[train, ]
@@ -153,6 +197,16 @@ lm_4 <- lm(train.y ~ train.x[,top_10_new$index])
 mean((val.y - predict.lm(lm_4, data.frame(val.x[,top_10_new$index]))) ^ 2)
 ```
 
+### d.
+
+In our finding, we found out that with the same $q = 10$ features, "Option 1" gave
+us a lower estimated test error when compare to "Option 2". And the reason for that
+is when selecting top 10 predictors, we used all the information/data we have for
+"Option 1", and that includes validation set, which is not appropriate when performing
+subset selection. Hence, we shall avoid using this and this way of modeling does not 
+give us meaningful answers. Hence, despite having higher test error, we shall use 
+"Option 2" to perform this task.
+
 ## 3.
 
 ### a.
@@ -162,7 +216,7 @@ I choose a data set that is called "Superconductivty Data Data Set". It has $p =
 
 ### b.
 
-```{r}
+```{r ex3b}
 df <- read.csv("train.csv")
 
 set.seed(123)
@@ -194,29 +248,356 @@ plot(ridge_mod, xvar="lambda")
 
 ### d.
 
-```{r}
-smallest <- 1000
-target <- 0
-for (i in lambdas){
-  ridge_pred <- predict(ridge_mod, s = i, newx=as.matrix(df_val[1:81]))
-  error <- mean((ridge_pred - as.matrix(df_val[82]))^2)
-  if (error < smallest){
-    smallest <- error
-    target <- i
-  }
-}
+```{r ex3d}
+cv.out <- cv.glmnet(as.matrix(df[1:81]), as.matrix(df[82]), alpha = 0)
+plot(cv.out)
 
+best_lambda <- cv.out$lambda.min
 
-
+smallest_test_error <- min(cv.out$cvm)
 ```
 
-When $\lambda = $
+When $\lambda =$ `r best_lambda`, we will have the smallest test error of `r smallest_test_error`.
+
+
+### e.
+
+```{r ex3e}
+lambdas <- 10^seq(10, -2, length=100)
+lasso_mod <- glmnet(as.matrix(df_train[1:81]), as.matrix(df_train[82]), alpha = 1, lambda = lambdas)
+
+dim(coef(lasso_mod))
+
+plot(lasso_mod, xvar="lambda")
+```
+
+### f.
+
+```{r ex3f}
+cv.out <- cv.glmnet(as.matrix(df[1:81]), as.matrix(df[82]), alpha = 1)
+plot(cv.out)
+
+best_lambda <- cv.out$lambda.min
+
+smallest_test_error <- min(cv.out$cvm)
+
+coef(cv.out, s=best_lambda)
+```
+
+Best lambda in this case is `r best_lambda`, we will have the smallest test error of `r smallest_test_error`. As we can see from above, this time, LASSO model uses all features except "entropy_atomic_radius", "mean_Valence", and "std_Valence".
+
 
 ## 4.
 
 ### a.
 
-```{r}
+```{r ex4a}
+data(Auto)
+# Split data
+set.seed(434)
+degrees <- c(1:10)
+train <- sample(392, 196)
+test_MSE <- matrix(NA, 10, 10)
+for(i in degrees){
+  lm.fit <- lm(mpg ~ poly(horsepower, i), data = Auto, subset = train)
+  test_MSE[1, i] <- mean((Auto$mpg - predict(lm.fit, Auto))[-train] ^ 2)
+}
+
+plot(x = degrees, y = test_MSE[1, ],
+     lwd = 2,
+     type = "l",
+     lty = 1,
+     ylim = c(15,27),
+     xlab = "Degree of Polynomial",
+     ylab = "Mean Squared Error")
+
+
+for (i in 2:10) {
+  train <- sample(392, 196)
+  for (j in degrees) {
+    lm.fit <- lm(mpg ~ poly(horsepower, j),
+                 data = Auto,
+                 subset = train)
+    test_MSE[i, j] <- mean((Auto$mpg - predict(lm.fit, Auto))[-train] ^ 2)
+  }
+  lines(x = degrees, y = test_MSE[i, ], col = i,
+        lty = 1,
+        lwd = 2)
+}
+
+kable(tibble(
+  Degree = degrees,
+  "Mean Validation MSE" = rowMeans(test_MSE)
+))
 
 ```
+
+As we can see from the above table, Mean Test MSE is the smallest when degree is at 7, with 
+a value of 16.25580.  
+I found out that the test error is \textbf{not} monotonically decreasing. And after 
+a sharp decrease in Degree 2, we see little to no improvements, and sometimes even
+worse test error with higher degrees.
+
+### b.
+```{r ex4b}
+# LOOCV
+set.seed(435)
+cv_error <- rep(NA, 10)
+
+for( i in 1:10){
+  glm.fit <- glm(mpg ~ poly(horsepower, i), data = Auto)
+  cv_error[i] <- cv.glm(Auto, glm.fit)$delta[1]
+}
+
+kable(tibble(
+  Degree = degrees,
+  "LOOCV" = cv_error
+))
+
+plot(x = degrees,
+     y = cv_error,
+     xlab = "Degree of Polynomial",
+     ylab = "Mean Squared Error",
+     main = "LOOCV",
+     col = "purple",
+     type = "b",
+     pch = 16)
+```
+
+
+With LOOCV, the lowest error occurs at Degree equals 7, with mean test error of 18.83305.  
+I found out that the test error is \textbf{not} monotonically decreasing. And after 
+a sharp decrease in Degree 2, we see little to no improvements, and sometimes even
+worse test error with higher degrees.
+
+### c.
+
+```{r ex4c}
+set.seed(435)
+
+cv_error_10 <- matrix(0, 10, 10)
+
+for (i in 1:10) {
+  glm.fit <- glm(mpg ~ poly(horsepower, i), data = Auto)
+  cv_error_10[1, i] <- cv.glm(Auto, glm.fit, K = 10)$delta[1]
+}
+plot(
+  x = c(1:10),
+  y = cv_error_10[1,],
+  lty = 1,
+  type = "l",
+  lwd = 2,
+  ylim = c(16, 28),
+  xlab = "Degree of Polynomial",
+  ylab = "Mean Squared Error",
+  main = "10-fold CV"
+)
+
+
+for (i in 2:10) {
+  for (j in 1:10) {
+    glm.fit <- glm(mpg ~ poly(horsepower, j), data = Auto)
+    cv_error_10[i, j] <- cv.glm(Auto, glm.fit, K = 10)$delta[1]
+  }
+  lines(x = c(1:10), y = cv_error_10[i, ],
+        col = i,
+        lwd = 2)
+}
+
+kable(tibble(
+  Degree = degrees,
+  "Mean Validation MSE" = rowMeans(cv_error_10)
+))
+```
+
+At degree equals to 5, we have the smallest mean 10 fold CV error of 19.53472. 
+I found out that the test error is \textbf{not} monotonically decreasing. And after 
+a sharp decrease in Degree 2, we see little to no improvements, and sometimes even
+worse test error with higher degrees.
+
+
+### d.
+
+```{r ex4d}
+set.seed(435)
+degrees <- c(1:10)
+train_MSE <- rep(NA, 10)
+
+for(i in degrees){
+  lm.fit <- lm(mpg ~ poly(horsepower, i), data = Auto)
+  train_MSE[i] <- mean(lm.fit$residuals^2)
+}
+
+plot(x = degrees,
+     y = train_MSE,
+     xlab = "Degree of Polynomial",
+     ylab = "Training Set Mean Squared Error",
+     main = "Linear Model with 1-10 degree of Polynomial",
+     col = "red",
+     type = "b",
+     pch = 16)
+
+kable(tibble(
+  Degree = degrees,
+  "Mean Validation MSE" = train_MSE
+))
+```
+
+With increase in Degree of Polynomial, our Training MSE will monotonically decrease, and
+the smallest Train MSE occurred at $degree = 10$. 
+
+### e.
+
+```{r ex4e}
+set.seed(435)
+
+lm.fit <- lm(mpg ~ poly(horsepower, 10), data = Auto)
+summary(lm.fit)
+```
+
+As we can see from summary table, the intercept, first, and second degree
+polynomials are statistically significant for having p-value<0.001. And Degree 5,
+p-value<0.01, Degree 6, p-value < 0.05, Degree 7, p-value < 0.1. However, after Degree
+2, all the rest are minor changes/improvement to our test error. Hence I would say
+using 2 degree of freedom polynomial fit is a good enough practice. And it does match the
+graph we plotted from (a)-(d), where we saw a sharp decrease in Test/Train MSE at 2 degree
+of polynomial.
+
+
+## 5.
+
+
+### a.
+
+
+
+\begin{align*}
+\arg\min_\beta \sum_{i = 1}^n (y_i - \beta x_i)^2 = \frac{\partial}{\partial\beta}\sum_{i = 1}^n (y_i - \beta x_i)^2 &= 0\\
+-2 \sum_{i = 1}^n x_i(y_i - \beta x_i) &= 0\\
+\sum_{i = 1}^n x_iy_i - \beta\sum_{i = 1}^n x_i^2&= 0\\
+\hat\beta^{L.S.} = \frac{\sum_{i = 1}^n x_iy_i}{\sum_{i = 1}^n x_i^2}
+\end{align*}
+
+
+### b.
+
+
+\begin{align*}
+\arg\min_\beta \sum_{i = 1}^n (y_i - \beta x_i)^2 + \lambda\beta^2 = \frac{\partial}{\partial\beta}\left[\sum_{i = 1}^n (y_i - \beta x_i)^2 + \lambda\beta^2\right] &= 0\\
+-2 \sum_{i = 1}^n x_i(y_i - \beta x_i)  + 2\lambda\beta&= 0\\
+\sum_{i = 1}^n x_iy_i - \beta\sum_{i = 1}^n x_i^2 &= \lambda\beta\\
+\beta\left(\sum_{i = 1}^n x_i^2 + \lambda\right) &= \sum_{i = 1}^n x_iy_i\\
+\hat\beta^{L.S.} &= \frac{\sum_{i = 1}^n x_iy_i}{\sum_{i = 1}^n x_i^2 + \lambda}\\
+\end{align*}
+
+
+
+### c.
+
+From part a),
+
+
+\begin{align*}
+E[\hat\beta^{L.S.}] &= E\left[\frac{\sum_{i = 1}^n x_iy_i}{\sum_{i = 1}^n x_i^2}\right] \\
+&= E\left[\frac{\sum_{i = 1}^n x_i(3x_i + \varepsilon))}{\sum_{i = 1}^n x_i^2}\right] \\
+&= E\left[\frac{\sum_{i = 1}^n 3x_i^2 + \varepsilon \sum_{i = 1}^nx_i}{\sum_{i = 1}^n x_i^2}\right] \\
+\intertext{Since } X \text{ and } \varepsilon \text{ are independent}\\
+&= \frac{3E[\sum_{i = 1}^n x_i^2] + E[\varepsilon] \times E[\sum_{i = 1}^nx_i]}{E[\sum_{i = 1}^n x_i^2]} \\
+&= \frac{3E[\sum_{i = 1}^n x_i^2] }{E[\sum_{i = 1}^n x_i^2]} \\
+&= 3 = \beta
+\end{align*}
+
+
+Hence, $\hat\beta$ is an unbiased estimator of $\beta$.
+
+### d.
+
+
+\begin{align*}
+E[\hat\beta^{ridge}] &= E\left[\frac{\sum_{i = 1}^n x_iy_i}{\sum_{i = 1}^n x_i^2 + \lambda}\right]\\
+&= E\left[\frac{\sum_{i = 1}^n x_i(3x_i + \varepsilon))}{\sum_{i = 1}^n x_i^2+ \lambda}\right] \\
+&= E\left[\frac{\sum_{i = 1}^n 3x_i^2 + \varepsilon \sum_{i = 1}^nx_i}{\sum_{i = 1}^n x_i^2+ \lambda}\right] \\
+\intertext{Since } X \text{ and } \varepsilon \text{ are independent}\\
+&= \frac{3E[\sum_{i = 1}^n x_i^2] + E[\varepsilon] \times E[\sum_{i = 1}^nx_i]}{E[\sum_{i = 1}^n x_i^2] + E[\lambda]} \\
+&= \frac{3E[\sum_{i = 1}^n x_i^2]}{E[\sum_{i = 1}^n x_i^2] + E[\lambda]} \\
+\intertext{Since x is fixed, and lambda is a constant}\\
+&= \frac{3\sum_{i = 1}^n x_i^2}{\sum_{i = 1}^n x_i^2 + \lambda} \\
+\end{align*}
+
+Hence, we have shown that Ridge regression will give us a biased estimator $\hat\beta^{ridge}$ for $\beta$. However, as $\lambda \to 0$, we will have an less biased estimator for $\beta$.
+And finally when $E[\lambda] = 0$, $\hat\beta^{ridge}$ will be unbiased.
+
+
+### e.
+
+
+\begin{align*}
+Var[\hat\beta^{L.S.}] &= E\left[\hat\beta - E[\hat\beta]\right]^2\\
+&=E[\hat\beta - \beta]^2\\
+&=E\left[\frac{\sum_{i = 1}^n 3x_i^2 + \varepsilon \sum_{i = 1}^nx_i}{\sum_{i = 1}^n x_i^2} - 3\right]^2 \\
+&=E\left[\frac{\varepsilon \sum_{i = 1}^nx_i}{\sum_{i = 1}^n x_i^2} \right]^2 \\
+&= \frac{1}{\sum_{i = 1}^n x_i^4}E\left[ \left(\sum_{i = 1}^n\varepsilon x_i\right)^2\right]\\
+&= \frac{1}{\sum_{i = 1}^n x_i^4}E\left[ \left(x_1\varepsilon + x_2\varepsilon + ... + x_n\varepsilon\right)^2\right]\\
+&= \frac{1}{\sum_{i = 1}^n x_i^4}E\left[x_1^2\varepsilon^2 + x_2^2\varepsilon^2 + ... + x_n^2\varepsilon^2 + 2x_1x_2\varepsilon^2+... + 2x_{n-1}x_n\varepsilon^2\right]\\
+&= \frac{E[\varepsilon^2]}{\sum_{i = 1}^n x_i^4} E[x_1^2 + x_2^2+ ... + x_n^2 + 2x_1x_2+... + 2x_{n-1}x_n]\\
+\text{Because we are given } &Cov(\varepsilon_i, \varepsilon_i') =  0 \ \forall i \neq i'\\
+&= \frac{E[\varepsilon^2]}{\sum_{i = 1}^n x_i^4} E[x_1^2 + x_2^2+ ... + x_n^2]\\
+&= \frac{Var[\varepsilon] + E[\varepsilon]^2}{\sum_{i = 1}^n x_i^4}\sum_{i = 1}^n x_i^2\\
+&= \frac{\sigma^2}{\sum_{i = 1}^n x_i^2}
+\end{align*}
+
+
+
+
+### f.
+
+
+\begin{align*}
+Var[\hat\beta^{ridge}] &= E\left[\hat\beta^{ridge} - E[\hat\beta^{ridge}]\right]^2\\
+&=E\left[\frac{\sum_{i = 1}^n 3x_i^2 +  \sum_{i = 1}^n \varepsilon_ix_i}{\sum_{i = 1}^n x_i^2 + \lambda} - \frac{3\sum_{i = 1}^n x_i^2}{\sum_{i = 1}^n x_i^2 + \lambda}\right]^2\\
+&=E\left[\frac{ \sum_{i = 1}^n \varepsilon_ix_i}{\sum_{i = 1}^n x_i^2 + \lambda} \right]^2 \\
+&= \frac{1}{(\sum_{i = 1}^n x_i^2 + \lambda)^2}E\left[ \left(\sum_{i = 1}^n\varepsilon x_i\right)^2\right]\\
+&= \frac{1}{(\sum_{i = 1}^n x_i^2 + \lambda)^2}E\left[ \left(x_1\varepsilon + x_2\varepsilon + ... + x_n\varepsilon\right)^2\right]\\
+&= \frac{1}{(\sum_{i = 1}^n x_i^2 + \lambda)^2}E\left[x_1^2\varepsilon^2 + x_2^2\varepsilon^2 + ... + x_n^2\varepsilon^2 + 2x_1x_2\varepsilon^2+... + 2x_{n-1}x_n\varepsilon^2\right]\\
+&= \frac{E[\varepsilon^2]}{(\sum_{i = 1}^n x_i^2 + \lambda)^2} E[x_1^2 + x_2^2+ ... + x_n^2 + 2x_1x_2+... + 2x_{n-1}x_n]\\
+\text{Because we are given } &Cov(\varepsilon_i, \varepsilon_i') =  0 \ \forall i \neq i'\\
+&= \frac{E[\varepsilon^2]}{(\sum_{i = 1}^n x_i^2 + \lambda)^2} E[x_1^2 + x_2^2+ ... + x_n^2]\\
+&= \frac{Var[\varepsilon] + E[\varepsilon]^2}{(\sum_{i = 1}^n x_i^2 + \lambda)^2}\sum_{i = 1}^n x_i^2\\
+&= \frac{\sigma^2}{(\sum_{i = 1}^n x_i^2 + \lambda)^2}\sum_{i = 1}^n x_i^2
+\end{align*}
+
+
+
+### g.
+
+So we have
+
+
+\begin{align*}
+Bias[\hat\beta^{ridge}] &= E[\hat\beta^{ridge}] - \beta\\
+&= \frac{3\sum_{i = 1}^n x_i^2}{\sum_{i = 1}^n x_i^2 + \lambda} - 3\\
+&= 3\left(\frac{\sum_{i = 1}^n x_i^2}{\sum_{i = 1}^n x_i^2 + \lambda} - \frac{\sum_{i = 1}^n x_i^2 + \lambda}{\sum_{i = 1}^n x_i^2 + \lambda}\right)\\
+&= 3 \frac{-\lambda}{\sum_{i = 1}^n x_i^2 + \lambda}\\
+Bias^2[\hat\beta^{ridge}] &= 9\frac{\lambda^2}{(\sum_{i = 1}^n x_i^2 + \lambda)^2}\\
+\end{align*}
+
+
+And suppose we have $\sum_{i = 1}^n x_i^2  = 10$, $\sigma = 1$.
+
+```{r ex4g}
+x <- 10
+lambda <- seq(0, 5, by = 0.001)
+sigma <- 1
+plot(lambda, (-3*lambda/(x + lambda))^2, type = "l", col = "purple",
+     ylab = "Value", ylim = c(-1,1))
+lines(lambda, -3*lambda/(x + lambda), type = "l", col = "red")
+lines(lambda, 10*(sigma^2/(10 + lambda)^2), col = "blue")
+legend("topleft",
+       c("Squared Bias", "Bias", "Variance"),
+       col = c("purple", "red", "blue"),
+       lty = 1)
+```
+
+As we can see from above, as $lambda$ increases, $Bias^2$ increases and takes the value 0 at 0. And it's not hard to see that $\hat\beta^{ridge} = \hat\beta^{L.S.}$ if $\lambda = 0$.(This is the reason why Bias/Squared Bias is 0 at 0). Then, as $\lambda$ goes to $9$, since $\lambda \to \infty$ shows that the ridge estimate would be 0 and hence bias would be $3$. For variance though, we see that increase $\lambda$ reduce variances. Because larger penalty that introduced by $\lambda$ will force the weight to shrink towards zero and reduce the scale and variance. Thus, we will see that larger penalty in ridge-regression increases the Squared Bias for the estimate and reduces the variance. a.k.a, Bias-Variance Trade-off.
+
 
