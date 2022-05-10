@@ -29,7 +29,7 @@ x <- matrix(rnorm(10000*100), ncol=10000)
 lm_1a <- lm(y ~ x)
 ```
 
-In matrix form, we could rewrite our expression as:
+We can write our expression as:
 
 
 \begin{align*}
