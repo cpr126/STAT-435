@@ -1,0 +1,62 @@
+---
+title: "HW4"
+author: "Peiran Chen"
+date: "5/13/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ISLR2)
+library(tidymodels)
+```
+
+## 1
+
+### (a)
+
+
+### (b)
+
+
+### (c)
+
+
+### (d)
+
+
+### (e)
+
+
+## 2.
+
+
+## 3.
+
+$$
+\begin{align*}
+f(X) &= \beta_0 + \beta_1X + \beta_2X^2 + \beta_3X^3 + \beta_4(X - \psi)^3_+\\
+\end{align*}
+$$
+
+## 4.
+
+```{r ex4}
+data(Wage)
+
+force(Wage)
+
+
+# Train-Test Split
+wage_split <- initial_split(Wage, strata = age)
+
+wage_train <- training(wage_split)
+wage_test  <- testing(wage_split)
+```
+
+
+```{r}
+
+```
+
