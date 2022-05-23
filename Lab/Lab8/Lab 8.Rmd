@@ -1,0 +1,258 @@
+---
+title: "An R Markdown document converted from Lab 8"
+output: html_document
+---
+
+## Lab 8:
+- Decision Tree
+- Random Forest
+
+```{r}
+library(tree)
+```
+
+```{r}
+library(repr)
+options(repr.plot.width=12, repr.plot.height=6)
+```
+
+## Classification Tree
+- Use the `Carseats` dataset
+- Transform a continuous variable `Sales` to a binary variable. 
+
+```{r}
+library(ISLR2)
+attach(Carseats)
+```
+
+```{r}
+High <- factor(ifelse(Sales <= 8, "No", "Yes"))
+```
+
+```{r}
+Carseats <- data.frame(Carseats, High)
+```
+
+### Use `tree` function to fit a classification tree to predict `High` using all variables but `Sales`. 
+
+```{r}
+tree.carseats <- tree(High ~ . - Sales, Carseats)
+```
+
+```{r}
+head(Carseats)
+```
+
+```{r}
+summary(tree.carseats)
+```
+
+### The deviance is given by 
+$$
+-2 \sum_{m} \sum_{k} n_{m k} \log \hat p_{m k}
+$$
+where $n_{mk}$ is the number of observations in the $m$th terminal node that belong to the $k$th class and $\hat p_{m k}$ represents the proportion of training observations in the $m$-th region that are from the $k$th class.
+
+### It is closely related to the entropy
+$$
+- \sum_{m} \sum_{k} \hat p_{m k} \log \hat p_{m k}
+$$
+
+### A small deviance indicates a tree provide a good fit to the training data. 
+### The *residual mean deviance* is simply the deviance divided by $n - |T_0|$ and in this case $400 - 27 = 373$. 
+
+### We can also plot a tree with `plot` function.
+
+```{r}
+plot(tree.carseats)
+text(tree.carseats, pretty = 0) # pretty means that to include the category names for any qualitative variables.
+```
+
+### Seems like that the most important variable is shelving location, as the first branch differentiates `Good` locations from `Bad` and `Medium`.  
+### It turns out that the left branch corresponds to the split being true.  So the left branch is for `Bad` and `Medium`, while the right branc his for `Good`. 
+
+```{r}
+tree.carseats
+```
+
+### Now estimate test error
+
+```{r}
+set.seed(2)
+train <- sample(1 : nrow(Carseats), 200)
+Carseats.test <- Carseats[-train, ]
+High.test <- High[-train]
+
+tree.carseats <- tree(High ~ . - Sales, Carseats, subset=train)
+
+# We specify type = class to instruct R to return the actual class prediction.
+tree.pred <- predict(tree.carseats, Carseats.test, type="class") 
+table(tree.pred, High.test)
+```
+
+```{r}
+(104 + 50) / 200
+```
+
+### Use `cv.tree` to perform cross validation
+### Cost complexity pruning is used in order to select a sequence of trees for consideration
+   - Estimating the cross-validation error for every possible subtree would be computationally imposibble, given that there are so many possible subtrees
+   - We start with a very big tree $T_0$, then we consider a sequence of tees indexed by a nonnegative tuning parameter $\alpha$. 
+   - For each value of $\alpha$, there corresponds to a subtree $T \subset T_0$ such that 
+    $$
+        \sum_{m=1}^{|T|} \sum_{i: x_i \in R_m} (y_i - \hat y_{R_m})^2 + \alpha |T|
+    $$ is as small as possible.
+   - $|T|$ is the number of terminal nodes, $R_m$ is the rectangel for the $m$-th terminal node, $\hat y_{R_m}$ is the predicted response for $R_m$. 
+   - As we increase $\alpha$ from 0, branches get pruned from the tree in a nested and predictable fasion, so obtaining the whole sequence of subtrees as a function of $\alpha$ is easy. 
+   - Then we can use cross validation to select among this sequence of trees.
+### We use argument `FUN = prune.misclass` in order to indicate that we want to use classification error as the metric to guide the cross-validation and pruning process
+### The default for `cv.tree` is deviance. 
+
+```{r}
+set.seed(7)
+cv.carseats <- cv.tree(tree.carseats, FUN=prune.misclass)
+names(cv.carseats)
+```
+
+### `Size` stands for the number of terminal nodes and `k` is the cost-complexity parameter (corresponds to $\alpha$
+
+```{r}
+cv.carseats
+```
+
+### `Dev` actually means the misclassification errors
+### 0 no constraints on the size of the tree
+### We should then select the tree with 9 terminal nodes
+
+```{r}
+par(mfrow = c(1, 2))
+plot(cv.carseats$size, cv.carseats$dev, type="b")
+plot(cv.carseats$k, cv.carseats$dev, type="b")
+```
+
+### Use `prune.misclass` function to prune the tree to obtain the nine-node tree
+
+```{r}
+prune.carseats <- prune.misclass(tree.carseats, best=9)
+```
+
+```{r}
+plot(prune.carseats)
+text(prune.carseats, pretty=0)
+```
+
+```{r}
+tree.pred <- predict(prune.carseats, Carseats.test, type="class")
+table(tree.pred, High.test)
+```
+
+```{r}
+(97 + 58) / 200
+```
+
+### Regression Tree
+### Now use `Boston` dataset
+
+```{r}
+set.seed(1)
+train <- sample(1 : nrow(Boston), nrow(Boston) / 2)
+tree.boston <- tree(medv ~ ., Boston, subset = train)
+summary(tree.boston)
+```
+
+```{r}
+plot(tree.boston)
+text(tree.boston, pretty = 0)
+```
+
+```{r}
+tree.boston <- tree(medv ~ ., Boston, subset = train, control = tree.control(nobs = length(train), mindev = 0))
+```
+
+```{r}
+summary(tree.boston)
+```
+
+```{r}
+cv.boston <- cv.tree(tree.boston)
+plot(cv.boston$size, cv.boston$dev, type="b")
+```
+
+```{r}
+prune.boston <- prune.tree(tree.boston, best = 5)
+plot(prune.boston)
+text(prune.boston, pretty = 0)
+```
+
+```{r}
+yhat <- predict(tree.boston, newdata = Boston[-train, ])
+boston.test <- Boston[-train, "medv"]
+```
+
+```{r}
+plot(yhat, boston.test)
+abline(0, 1)
+
+mean((yhat - boston.test)^2)
+```
+
+## Bagging and Random Forests
+
+```{r}
+library(randomForest)
+```
+
+## Recal that bagging is simply a special case of a random forest with $m = p$. Therefore, `randomForest` can be used to perform both random forests and bagging. 
+
+```{r}
+set.seed(1)
+bag.boston <- randomForest(medv ~., data = Boston,
+                          subset=train, mtry=12, importance = TRUE)
+```
+
+```{r}
+bag.boston
+```
+
+```{r}
+yhat.bag <- predict(bag.boston, newdata = Boston[-train, ])
+```
+
+```{r}
+plot(yhat.bag, boston.test)
+abline(0, 1)
+mean((yhat.bag - boston.test)^2)
+```
+
+```{r}
+bag.boston <- randomForest(medv ~ ., data = Boston,
+                          subset = train, mtry=12, ntree=25)
+yhat.bag <- predict(bag.boston, newdata = Boston[-train, ])
+mean((yhat.bag - boston.test)^2)
+```
+
+### For random forest, we will specify a smaller `mtry` argument.  The default is for regression trees, we set $m = p/3$ and for classification trees, we set $m = \sqrt{p}$. 
+
+```{r}
+set.seed(1)
+rf.boston <- randomForest(medv ~ ., data = Boston, 
+                         subset = train, mtry = 6, importance = T)
+yhat.rf <- predict(rf.boston, newdata = Boston[-train, ])
+```
+
+```{r}
+mean((yhat.rf - boston.test)^2)
+```
+
+```{r}
+importance(rf.boston)
+```
+
+### First column is based on the mean decrease of accuracy in predictions on the out-of-bag samples when a given variable is permuted. 
+### The second column is a measure of the total decrease in node impurity that results from splits over that variable, averaged over all trees. 
+### For regression trees, node impurity is measured by the training RSS, and for classification, node impurity is measured by the deviance.
+
+```{r}
+varImpPlot(rf.boston)
+```
+
