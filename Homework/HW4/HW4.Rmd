@@ -9,12 +9,16 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 library(tidyverse)
 library(ISLR2)
+library(knitr)
 library(tidymodels)
 library(splines)
 library(tree)
+library(gam)
 library(repr)
 library(boot)
+library(ranger)
 library(randomForest)
+library(stargazer)
 options(repr.plot.width=12, repr.plot.height=6)
 ```
 
@@ -25,22 +29,25 @@ For (a) to (d), when $\lambda = \infty$, we have a large penalty term that force
 
 __(a)__
 
-When $\lambda=\infty, m = 0$, $g^{(0)}(x) \to 0$. So, $\hat{g}=0$. 
+When $\lambda=\infty, m = 0$, $g^{(0)}(x) \to 0$. So, 
+\[\hat{g}= \arg\min_g \sum_{i = 1}^n (y_i - g(x_i))^2 + \infty \int [g(x)]^2 dx= 0\]. 
 
 __(b)__
 
-When $\lambda=\infty, m = 1$, $g'= 0$. So, $\hat{g}=constant$, it would be a horizontal line.
+When $\lambda=\infty, m = 1$, $g'= 0$. So, 
+\[\hat{g}= \arg\min_g \sum_{i = 1}^n (y_i - g(x_i))^2 + \infty \int [g'(x)]^2 dx\]. , it would be a horizontal line.
 
 __(c)__
 
-When $\lambda=\infty, m = 2$, $g''= 0$.So, $\hat{g}$ would be a straight line with slope.
+When $\lambda=\infty, m = 2$, $g''= 0$.So, \[\hat{g}= \arg\min_g \sum_{i = 1}^n (y_i - g(x_i))^2 + \infty \int [g''(x)]^2 dx\].  would be a straight line with slope.
   
 __(d)__
 
-When $\lambda=\infty, m = 3$, $g'''= 0$. So, $\hat{g}$ woule be a curve that is quadratic. 
+When $\lambda=\infty, m = 3$, $g'''= 0$. So, \[\hat{g}= \arg\min_g \sum_{i = 1}^n (y_i - g(x_i))^2 + \infty \int [g'''(x)]^2 dx\].  woule be a curve that is quadratic. 
 
 __(e)__
-  
+
+\[\hat{g}= \arg\min_g \sum_{i = 1}^n (y_i - g(x_i))^2 \]. 
 When $\lambda=0$ the penalty term has no effect in our function, so we get a curve/spline that interpolates all the n points perfectly.
 
 
@@ -49,16 +56,19 @@ When $\lambda=0$ the penalty term has no effect in our function, so we get a cur
 ## 2.
 
 ```{r}
-curve(2 + 3*(ifelse(x >= 0,
-                   ifelse(x <= 2, 1, 0), 0) - (x+1)*ifelse(x >= 1,
-                   ifelse(x <= 2, 1, 0), 0)) - 2 * ((2*x-2) * I(x>=3 & x <=4) -I(x > 4 & x <= 5)) ,
-      from = -2,
-      to  = 6,
-      xlab = "X",
-      ylab = "Y",
-      col = "lightblue",
-      lwd = 2,
-      main = "Plot of X vs Y")
+curve(
+  2 + 3 * (ifelse(x >= 0,
+                  ifelse(x <= 2, 1, 0), 0) - (x + 1) * ifelse(x >= 1,
+                  ifelse(x <= 2, 1, 0), 0)) - 2 * ((2 * x - 2) * I(x >=
+                  3 & x <= 4) - I(x > 4 & x <= 5)) ,
+  from = -2,
+  to  = 6,
+  xlab = "X",
+  ylab = "Y",
+  col = "lightblue",
+  lwd = 2,
+  main = "Plot of X vs Y"
+)
 ```
 
 
@@ -170,7 +180,7 @@ best.fit <- glm(wage ~ poly(age, which.min(Test_MSE)), data = wage_train)
 
 - We see that at degree of 5, we have the optimal fit(lowest Test MSE) for Polynomial Regression.
 
-- And now we can go back to the Validation set, we can calculate it's performance(Validation MSE) as:
+- And now we can go back to the Validation set, we can calculate it's performance(Test MSE) as:
 
 ```{r}
 mean((wage_val$wage - predict(best.fit, data.frame(wage_val)))^2)
@@ -221,11 +231,11 @@ best.fit <- glm(wage ~ poly(age, 3), data = wage_train)
 poly_MSE <- mean((wage_val$wage - predict(best.fit, data.frame(wage_val)))^2)
 ```
 
-Hence, we would now use third degree of Polynomial fit, and it's Validation MSE is `r poly_MSE`.
+Hence, we would now use third degree of Polynomial fit, and it's Test MSE is `r poly_MSE`.
 
 
 
-__(b)__ Step Function
+### b Step Function
 
 - Again, for the step function, we will also perform 10 fold CV on our Training set to see at what level of cuts will give us lowest Test MSE.
 
@@ -263,10 +273,9 @@ matlines(Wage_new$age, se.bands, lwd = 1, col = "red", lty = 3)
 
 ```
 
- - And we can calculate it's Validation MSE as:
+ - And we can calculate it's Test MSE as:
 
 ```{r}
-
 Wage_new <- wage_val %>%
   arrange(age) %>%
   mutate(age.cut = cut(age, 8))
@@ -274,42 +283,165 @@ step_MSE <-
   mean((Wage_new$wage - predict(best.fit, data.frame(Wage_new))) ^ 2)
 ```
 
-Hence, we would now use 8 Cut Step function fit, and it's Validation MSE is `r step_MSE`.
+Hence, we would now use 8 Cut Step function fit, and it's Test MSE is `r step_MSE`.
 
 
-__(c)__ Piecewise polynomial
+### c. Piecewise polynomial
 
-- From part (a), we learned that polynomials that is greater than degree 3 is not need at $\alpha = 0.05$. Hence we can fit a piecewise 3 degree polynomial with knots at $\xi$. And we can select the number of knots by performing 10 Fold CV on our Training Set.
+- From part (a), we learned that polynomials that is greater than degree 3 is not need at $\alpha = 0.05$. Hence we can fit a piecewise 3 degree polynomial with knots at 25,50,75$^{th}$ quantiles.
 
-```{r, eval = FALSE}
+```{r, warning = FALSE}
 set.seed(435)
+agelims <- range(Wage$age)
+quantiles <- as.numeric(quantile(Wage$age, c(0.25, 0.5, 0.75)))
+grid1 <- seq(from = agelims[1], to = quantiles[1])
+grid2 <- seq(from = quantiles[1], to = quantiles[2])
+grid3 <- seq(from = quantiles[2], to = quantiles[3])
+grid4 <- seq(from = quantiles[3], to = agelims[2])
+
+fit_1 <- lm(wage ~ poly(age, 3), data = wage_train[wage_train$age < quantiles[1],])
+fit_2 <- lm(wage ~ poly(age, 3), data = wage_train[wage_train$age > quantiles[1] & wage_train$age <= quantiles[2],])
+fit_3 <- lm(wage ~ poly(age, 3), data = wage_train[wage_train$age > quantiles[2] & wage_train$age <= quantiles[3],])
+fit_4 <- lm(wage ~ poly(age, 3), data = wage_train[wage_train$age > quantiles[3],])
+
+pred_1 <- predict(fit_1, newdata = list(age = grid1), se = TRUE)
+bands1 <- cbind(pred_1$fit + 2* pred_1$se.fit, 
+                  pred_1$fit - 2 * pred_1$se.fit)
+pred_2 <- predict(fit_2, newdata = list(age = grid2), se = TRUE)
+bands2 <- cbind(pred_2$fit + 2* pred_2$se.fit, 
+                  pred_2$fit - 2 * pred_2$se.fit)
+pred_3 <- predict(fit_3, newdata = list(age = grid3), se = TRUE)
+bands3 <- cbind(pred_3$fit + 2* pred_3$se.fit, 
+                  pred_3$fit - 2 * pred_3$se.fit)
+pred_4 <- predict(fit_4, newdata = list(age = grid4), se = TRUE)
+bands4 <- cbind(pred_4$fit + 2* pred_4$se.fit, 
+                  pred_4$fit - 2 * pred_4$se.fit)
+
+plot(Wage$age, Wage$wage, xlim = agelims, cex = .5, col = "grey", xlab = "Age", ylab = "Wage", main = "Piecewise Polynomial")
+
+lines(grid1, pred_1$fit, lwd=2, col="red")
+lines(grid2, pred_2$fit, lwd=2, col="red")
+lines(grid3, pred_3$fit, lwd=2, col="red")
+lines(grid4, pred_4$fit, lwd=2, col="red")
+matlines(grid1, bands1, lwd=1, col="red", ity = "dashed")
+matlines(grid2, bands2, lwd=1, col="red", ity = "dashed")
+matlines(grid3, bands3, lwd=1, col="red", ity = "dashed")
+matlines(grid4, bands4, lwd=1, col="red", ity = "dashed")
+
+
+wage_val_1 <- wage_val %>%
+  arrange(age) %>%
+  filter(age < quantiles[1])
+
+wage_val_2 <- wage_val %>%
+  arrange(age) %>%
+  filter(age < quantiles[2] & age > quantiles[1])
+
+
+
+wage_val_3 <- wage_val %>%
+  arrange(age) %>%
+  filter(age < quantiles[3] & age > quantiles[2])
+
+wage_val_4 <- wage_val %>%
+  arrange(age) %>%
+  filter(age < agelims[2] & age > quantiles[3])
+
+pp_MSE <-
+  sum((
+    wage_val_1$wage + wage_val_2$wage + wage_val_3$wage + wage_val_4$wage  -
+      predict(fit_1, data.frame(wage_val_1)) - predict(fit_2, data.frame(wage_val_2))
+    - predict(fit_3, data.frame(wage_val_3)) - predict(fit_4,
+                                                       data.frame(wage_val_4))
+  ) ^ 2) / (nrow(wage_val))
+  
+
+```
+
+Hence, our Piecewise Polynomial fit have a Test MSE of `r pp_MSE`.
+
+### d. Cubic Spline
+
+- Again, for the Cubic Spline, we will also perform 10 fold CV on our Training set to see at what degree of freedom will give us lowest Test MSE.
+
+```{r, warning = FALSE}
+set.seed(435)
+
 Test_MSE <- rep(NA, 10)
-wage_train <- wage_train[1:11]
 for (i in 2:10) {
-    fit <- glm(wage ~ cut(age, i), data = wage_train)
+    fit <- glm(wage ~ bs(age, df = i), data = wage_train)
     Test_MSE[i] <- cv.glm(wage_train, fit, K = 10)$delta[1]
 }
 
-plot(2:10, Test_MSE[-1], xlab = "Cuts", ylab = "Test MSE", pch = 16, col = "lightblue")
+plot(2:10, Test_MSE[-1], xlab = "Degree of Freedom", ylab = "Test MSE", pch = 16, col = "lightblue")
 abline(v = which.min(Test_MSE), col = "red")
 legend("topright", "Lowest Test MSE", lty = 1, lwd = 1, col = "red")
+
+attr(bs(wage_train$age, df = 6), "knots")
 ```
 
+We can see that the Test MSE is at its minimum when R chooses degree of freedom of 6 with knots at 33.75 42.00 51.00. for our Cubic Spline fit.  Now, we can plot it and see the fit and it's correspond estimated 95\% confidence interval.
 
-### d.
 
-```{r}
-fit <- lm(wage ~ bs(age, knots = c(25, 40, 60)), data = wage_train)
+```{r, warning = FALSE}
+plot(Wage$age, Wage$wage,xlab = "Age", ylab = "Wage", main = "Cubic Spline at knots 33.75 42.00 51.00", col = "grey")
+Wage_new <- Wage %>%
+  arrange(age)
+
+cs.fit <- lm(wage ~ bs(age, df = 6), data = wage_train)
+preds_cs <- predict(cs.fit, data.frame(Wage_new[1:10]), se = TRUE)
+se.bands <- cbind(preds_cs$fit + 2 * preds_cs$se.fit, 
+                  preds_cs$fit - 2 * preds_cs$se.fit)
+
+lines(Wage_new$age, preds_cs$fit,
+      lwd = 2, col = "red")
+matlines(Wage_new$age, se.bands, lwd = 1, col = "red", lty = 3)
+abline(v = c(33.75, 42.00, 51.00), col = "blue", lty = "dashed")
+
+cs_MSE <- mean((wage_val$wage - predict(cs.fit, data.frame(wage_val)))^2)
+
 ```
 
+Hence, Cubic Spline with knots at 33.75 42.00 51.00's Test MSE is `r step_MSE`.
 
-### e.
+
+### e. Smoothing Spline
+
+- When fitting Smoothing Spline, I'm using leave-one-out CV to select the best lambda.
 
 ```{r, warning = FALSE}
 fit.smooth_spline <- smooth.spline(wage_train$age, wage_train$wage, cv = TRUE)
+DF <- fit.smooth_spline$df
+plot(Wage$age, Wage$wage,xlab = "Age", ylab = "Wage", main = "Smoothing Spline", col = "grey")
+Wage_new <- Wage %>%
+  arrange(age)
+
+lines(fit.smooth_spline,
+      lwd = 2, col = "red")
+
+
+ss_MSE <- mean((wage_val$wage - predict(fit.smooth_spline, wage_val$age)$y)^2)
+```
+Hence, our Smoothing Spline fit with degree of freedom of `r DF`'s Test MSE is `r ss_MSE`.
+
+### conclusion
+
+So far, we've done fit to predict \textbf{Wage} using \textbf{Age}.
+And our Test MSE's are
+
+```{r}
+kable(tibble(
+  " " = c("Polynomial", "Step Function", "Piecewise Polynomial", "Cubic Spline", "Smoothing Spline"),
+  "Tunning" = c("degree 3", "8 Cut", "25,50,75th Quantile, degree 3", "DF = 6", "DF = 5.6"),
+  "Test MSE" = c(poly_MSE, step_MSE, pp_MSE, cs_MSE, ss_MSE)
+))
 ```
 
+By the above table, it's not hard to see that Piecewise degree 3 Polynomial with knots at 25,50,75th Quantile yields the best results on the test set.
+
 ## 5.
+
+We would first remove the name variable and split the Train and test data at the proportion of $2:1$. So we will have about $66.7\%$ of the data being training set. And it is in the typical range where it's not like lower sample sizes that can reduce the training time but may introduce more bias than necessary. And Increasing the training sample can increase performance but at the risk of overfitting(introduces more variance).
 
 ```{r}
 # Remove the name column
@@ -317,7 +449,7 @@ set.seed(435)
 Auto_new <- Auto %>%
   select(-name)
 
-train <- sample(1 : nrow(Auto_new), nrow(Auto_new) / 2)
+train <- sample(1 : nrow(Auto_new), 2*nrow(Auto_new) / 3)
 
 ```
 
@@ -363,10 +495,10 @@ auto.test <- Auto_new[-train, "mpg"]
 plot(yhat, auto.test)
 abline(0, 1)
 
-Test_MSE <- mean((yhat - auto.test)^2)
+tree_MSE <- mean((yhat - auto.test)^2)
 ```
 
-And my test MSE is `r Test_MSE` for my regression tree to predict a car’s gas mileage.
+And my test MSE is `r tree_MSE` for my regression tree to predict a car’s gas mileage.
 
 ### b
 
@@ -376,13 +508,181 @@ And my test MSE is `r Test_MSE` for my regression tree to predict a car’s gas 
 set.seed(435)
 bag.auto <- randomForest(mpg ~ ., data = Auto_new, subset = train, mtry = 7, importance = TRUE)
 
-yhat.bag <- predict(bag.auto, newdata = Auto_new[-train, ]) 
+yhat.bag <- predict(bag.auto, newdata = Auto_new[-train, ])
 plot(yhat.bag, auto.test)
 abline(0, 1)
-mean((yhat.bag - auto.test)^2)
+bag_MSE <- mean((yhat.bag - auto.test)^2)
+
+bag.auto
+```
+
+And the test set MSE associated with the bagged regression tree is `r bag_MSE`, about 75% of that obtained using an optimally-pruned single tree. And our tuning parameters are:
+
+- $mtry = p = 7$: number of variables to randomly sample as candidates at each split.
+- number of samples trained on is $\frac23$ of the total data
+- $ntree = 25$: number of trees
+
+### c.
+
+- This time, we would fit a randomForest at our data.
+- By default, random forest use $p/3$ variables when building a random forest of regression trees, here we use $mtry = 3$
+
+
+```{r}
+set.seed(435)
+
+rf.auto <- randomForest(mpg ~., data = Auto_new, subset = train,
+                        mtry = 3)
+
+yhat.rf <- predict(rf.auto, newdata = Auto_new[-train, ]) 
+rf_MSE <- mean((yhat.rf - auto.test)^2)
 
 ```
 
-And our Test MSE is `r mean((yhat.bag - auto.test)^2)`.
+- The test set MSE is `r rf_MSE`. And we did not see an improvement over bagging in this case.
+- I want to further tune the randomForest to make it performs better.
+- I will use ranger(an implementation of Brieman's random forest algorithm) to perform grid search.
 
 
+```{r}
+hyper_grid <- expand.grid(
+  mtry = seq(1, 7, by = 1),
+  num.trees = seq(5, 500, by = 25),
+  nodesize = seq(3, 9, by = 1),
+  OOB_RMSE = 0
+)
+
+for(i in 1:nrow(hyper_grid)) {
+  
+  # train model
+  model <- ranger(
+    formula         = mpg ~ ., 
+    data            = Auto_new[train, ], 
+    num.trees       = hyper_grid$num.trees[i],
+    min.node.size   = hyper_grid$nodesize[i],
+    mtry            = hyper_grid$mtry[i],
+    seed            = 435
+  )
+  
+  hyper_grid$OOB_RMSE[i] <- sqrt(model$prediction.error)
+}
+
+kable(hyper_grid %>% 
+  dplyr::arrange(OOB_RMSE) %>%
+  head(10))
+```
+
+- Hence, we would now use the tuning parameters with best result from above and fit a new randomForest
+
+```{r}
+set.seed(435)
+rf2.auto <- randomForest(mpg ~., data = Auto_new, subset = train,
+                        mtry = 3,ntree = 255, nodesize = 3)
+
+yhat.rf2 <- predict(rf2.auto, newdata = Auto_new[-train, ]) 
+rf2_MSE <- mean((yhat.rf2 - auto.test)^2)
+```
+
+Our new Test Set MSE is `r rf2_MSE`, which is slightly lower than the first randomForest model we fit, but still worse then Bagged regression tree. 
+
+And my new randomForest have following tuning parameters:
+
+- $mtry = 3$: the number of variables to randomly sample as candidates at each split
+- $ntree = 255$: number of trees
+- $nodesize = 3$: minimum number of samples within the terminal nodes
+
+### d.
+
+- Now, we want to fir a \textbf{GAM} to predict \textbf{mpg} using natural spline functions of \textbf{year}.
+
+```{r}
+gam2.auto <-
+  gam(mpg ~ cylinders + s(displacement) + s(horsepower) + s(weight) + s(acceleration) + year + origin,
+    data = Auto_new,
+    subset = train
+  )
+
+par(mfrow = c(3, 3))
+plot.Gam(gam2.auto, se = TRUE, col = "red")
+
+```
+
+We plot the fitted function and pointwise standard errors, and saw that the functions are linear in \textbf{year, origin,} and \textbf{cylinders}. We can now perform a series of ANOVA tests in order to determine which of these three models is best: 
+
+- $\mathcal M_1$: a GAM that excludes \textbf{year, cylinders,} and \textbf{origin}.
+- $\mathcal M_2$: a GAM that uses linear functions of \textbf{year, origin,} and \textbf{cylinders}.
+- $\mathcal M_3$: a GAM that uses spline function for \textbf{year, cylinders,} and natural spline of \textbf{origin}.
+
+```{r}
+
+gam1.auto <-
+  gam(mpg ~ s(displacement) + s(horsepower) + s(weight) + s(acceleration),
+    data = Auto_new,
+    subset = train
+  )
+gam3.auto <-
+  gam(mpg ~ s(cylinders) + s(displacement) + s(horsepower) + s(weight) +
+        s(acceleration)+ s(year) + ns(origin),
+    data = Auto_new,
+    subset = train
+  )
+
+kable(tibble(" " = c("M1", "M2", "M3"),
+            format(anova(gam1.auto, gam2.auto, gam3.auto), digits = 3)))
+```
+
+By ANOVA, we find that there's compelling evidence that a GAM with a lienar function of  inclusion of \textbf{year, origin,} and \textbf{cylinders} is better than a GAM that does not include these predictors at all.(p-value = 7.89e-56
+) Then, there's also evidence that a GAM that uses spline function for \textbf{year, cylinders,} and natural spline of \textbf{origin} is better than a GAM that uses linear function of these predictors.(p-value = 1.77e-11). In other words, based on the result of this ANOVA, $\mathcal M_3$ is preferred.
+
+```{r}
+gam3.auto %>%
+  tidy() %>%
+  mutate(
+    p.value = scales::pvalue(p.value),
+  ) %>%
+  kable()
+```
+
+As we can see from the above table, all the predictors except s(acceleration) has a p-value of < 0.001. We can drop the acceleration term.
+
+```{r}
+gam4.auto <-
+  gam(mpg ~ s(cylinders) + s(displacement) + s(horsepower) + s(weight)+ s(year) + ns(origin) + acceleration,
+    data = Auto_new,
+    subset = train
+  )
+
+gam5.auto <- gam(mpg ~ s(cylinders) + s(displacement) + s(horsepower) + s(weight)+ s(year) + ns(origin),
+    data = Auto_new,
+    subset = train
+  )
+
+
+kable(tibble(" " = c("M3", "M4", "M5"),
+            format(anova(gam3.auto, gam4.auto, gam5.auto), digits = 3)))
+
+```
+
+With high p-value for comparing $\mathcal M_4$ with $\mathcal M_3$ and $\mathcal M_5$ with $\mathcal M_4$, we see that it's not necessary to drop acceleration or to make it linear. Hence, based on the results of this ANOVA, $\mathcal M_3$ is preferred.
+
+
+```{r}
+yhat.gam3 <- predict(gam3.auto, newdata = Auto_new[-train, ]) 
+gam3_MSE <- mean((yhat.gam3 - auto.test)^2)
+```
+
+And our Test Set MSE is `r gam3_MSE`.
+
+
+### e.
+
+
+```{r}
+kable(tibble(
+  "MEthods" = c("Regression Tree", "Bagged Regression", "Random Forest", "GAM"),
+   "Test MSE" = c(tree_MSE, bag_MSE, rf2_MSE, gam3_MSE)
+))
+```
+
+
+As we can see, GAM provides the lowest test MSE, however, if we take into account of the interpretability, I would prefer Regression Tree, because it's the most intuitive and easiest to explain to other people alongside with a comparable test MSE. If we don't take consideration into interpretability, I think either GAM or bagged regression will provide great result in terms of accuracy.

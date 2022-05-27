@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.5.5)  23 MAY 2022 12:05
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (TeX Live 2022) (preloaded format=pdflatex 2022.5.5)  24 MAY 2022 03:47
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -471,7 +471,7 @@ LaTeX Font Info:    Trying to load font information for U+msb on input line 122.
 (/Users/pchen/Library/TinyTeX/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-<question1.jpeg, id=40, 2294.5725pt x 1293.83376pt>
+<question1.jpeg, id=64, 2294.5725pt x 1293.83376pt>
 File: question1.jpeg Graphic file (type jpg)
 <use question1.jpeg>
 Package pdftex.def Info: question1.jpeg  used on input line 131.
@@ -485,90 +485,127 @@ LaTeX Font Info:    External font `lmex10' loaded for size
 [1
 
 {/Users/pchen/Library/TinyTeX/texmf-var/fonts/map/pdftex/updmap/pdftex.map} <./question1.jpeg>]
-LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 165.
+LaTeX Font Info:    Trying to load font information for T1+lmtt on input line 170.
 (/Users/pchen/Library/TinyTeX/texmf-dist/tex/latex/lm/t1lmtt.fd
 File: t1lmtt.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
 )
-<HW4_files/figure-latex/unnamed-chunk-1-1.pdf, id=60, 436.63126pt x 283.0575pt>
+<HW4_files/figure-latex/unnamed-chunk-1-1.pdf, id=85, 436.63126pt x 283.0575pt>
 File: HW4_files/figure-latex/unnamed-chunk-1-1.pdf Graphic file (type pdf)
 <use HW4_files/figure-latex/unnamed-chunk-1-1.pdf>
-Package pdftex.def Info: HW4_files/figure-latex/unnamed-chunk-1-1.pdf  used on input line 179.
+Package pdftex.def Info: HW4_files/figure-latex/unnamed-chunk-1-1.pdf  used on input line 187.
 (pdftex.def)             Requested size: 436.63019pt x 283.0568pt.
-LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 193.
+[2]
+LaTeX Font Info:    Trying to load font information for TS1+lmr on input line 201.
 (/Users/pchen/Library/TinyTeX/texmf-dist/tex/latex/lm/ts1lmr.fd
 File: ts1lmr.fd 2015/05/01 v1.6.1 Font defs for Latin Modern
-) [2 <./HW4_files/figure-latex/unnamed-chunk-1-1.pdf>]
+) [3 <./HW4_files/figure-latex/unnamed-chunk-1-1.pdf>]
 
 Package amsmath Warning: Foreign command \over;
 (amsmath)                \frac or \genfrac should be used instead
-(amsmath)                 on input line 262.
+(amsmath)                 on input line 270.
 
-[3]
 LaTeX Font Info:    Font shape `T1/lmtt/bx/n' in size <10> not available
-(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 304.
-<HW4_files/figure-latex/unnamed-chunk-2-1.pdf, id=82, 440.64626pt x 252.945pt>
+(Font)              Font shape `T1/lmtt/b/n' tried instead on input line 312.
+[4]
+<HW4_files/figure-latex/unnamed-chunk-2-1.pdf, id=114, 440.64626pt x 252.945pt>
 File: HW4_files/figure-latex/unnamed-chunk-2-1.pdf Graphic file (type pdf)
 <use HW4_files/figure-latex/unnamed-chunk-2-1.pdf>
-Package pdftex.def Info: HW4_files/figure-latex/unnamed-chunk-2-1.pdf  used on input line 320.
+Package pdftex.def Info: HW4_files/figure-latex/unnamed-chunk-2-1.pdf  used on input line 328.
 (pdftex.def)             Requested size: 440.65189pt x 252.94823pt.
-[4 <./HW4_files/figure-latex/unnamed-chunk-2-1.pdf>]
-<HW4_files/figure-latex/unnamed-chunk-4-1.pdf, id=96, 436.63126pt x 285.065pt>
+[5 <./HW4_files/figure-latex/unnamed-chunk-2-1.pdf>]
+<HW4_files/figure-latex/unnamed-chunk-4-1.pdf, id=126, 436.63126pt x 285.065pt>
 File: HW4_files/figure-latex/unnamed-chunk-4-1.pdf Graphic file (type pdf)
 <use HW4_files/figure-latex/unnamed-chunk-4-1.pdf>
-Package pdftex.def Info: HW4_files/figure-latex/unnamed-chunk-4-1.pdf  used on input line 370.
+Package pdftex.def Info: HW4_files/figure-latex/unnamed-chunk-4-1.pdf  used on input line 378.
 (pdftex.def)             Requested size: 436.63019pt x 285.0643pt.
-[5 <./HW4_files/figure-latex/unnamed-chunk-4-1.pdf>]
-<HW4_files/figure-latex/unnamed-chunk-7-1.pdf, id=109, 440.64626pt x 248.93pt>
+[6 <./HW4_files/figure-latex/unnamed-chunk-4-1.pdf>]
+<HW4_files/figure-latex/unnamed-chunk-7-1.pdf, id=140, 440.64626pt x 248.93pt>
 File: HW4_files/figure-latex/unnamed-chunk-7-1.pdf Graphic file (type pdf)
 <use HW4_files/figure-latex/unnamed-chunk-7-1.pdf>
-Package pdftex.def Info: HW4_files/figure-latex/unnamed-chunk-7-1.pdf  used on input line 462.
+Package pdftex.def Info: HW4_files/figure-latex/unnamed-chunk-7-1.pdf  used on input line 471.
 (pdftex.def)             Requested size: 440.65189pt x 248.93317pt.
-[6]
-<HW4_files/figure-latex/unnamed-chunk-8-1.pdf, id=115, 436.63126pt x 285.065pt>
+[7]
+<HW4_files/figure-latex/unnamed-chunk-8-1.pdf, id=147, 436.63126pt x 285.065pt>
 File: HW4_files/figure-latex/unnamed-chunk-8-1.pdf Graphic file (type pdf)
 <use HW4_files/figure-latex/unnamed-chunk-8-1.pdf>
-Package pdftex.def Info: HW4_files/figure-latex/unnamed-chunk-8-1.pdf  used on input line 487.
+Package pdftex.def Info: HW4_files/figure-latex/unnamed-chunk-8-1.pdf  used on input line 496.
 (pdftex.def)             Requested size: 436.63019pt x 285.0643pt.
-[7 <./HW4_files/figure-latex/unnamed-chunk-7-1.pdf>] [8 <./HW4_files/figure-latex/unnamed-chunk-8-1.pdf>]
-<HW4_files/figure-latex/unnamed-chunk-14-1.pdf, id=141, 437.635pt x 249.93375pt>
-File: HW4_files/figure-latex/unnamed-chunk-14-1.pdf Graphic file (type pdf)
-<use HW4_files/figure-latex/unnamed-chunk-14-1.pdf>
-Package pdftex.def Info: HW4_files/figure-latex/unnamed-chunk-14-1.pdf  used on input line 600.
-(pdftex.def)             Requested size: 437.6406pt x 249.93694pt.
-[9] [10 <./HW4_files/figure-latex/unnamed-chunk-14-1.pdf>]
-<HW4_files/figure-latex/unnamed-chunk-16-1.pdf, id=162, 382.42876pt x 203.76125pt>
+[8 <./HW4_files/figure-latex/unnamed-chunk-7-1.pdf>] [9 <./HW4_files/figure-latex/unnamed-chunk-8-1.pdf>]
+<HW4_files/figure-latex/unnamed-chunk-10-1.pdf, id=173, 436.63126pt x 285.065pt>
+File: HW4_files/figure-latex/unnamed-chunk-10-1.pdf Graphic file (type pdf)
+<use HW4_files/figure-latex/unnamed-chunk-10-1.pdf>
+Package pdftex.def Info: HW4_files/figure-latex/unnamed-chunk-10-1.pdf  used on input line 569.
+(pdftex.def)             Requested size: 436.63019pt x 285.0643pt.
+[10 <./HW4_files/figure-latex/unnamed-chunk-10-1.pdf>]
+<HW4_files/figure-latex/unnamed-chunk-11-1.pdf, id=186, 440.64626pt x 251.94125pt>
+File: HW4_files/figure-latex/unnamed-chunk-11-1.pdf Graphic file (type pdf)
+<use HW4_files/figure-latex/unnamed-chunk-11-1.pdf>
+Package pdftex.def Info: HW4_files/figure-latex/unnamed-chunk-11-1.pdf  used on input line 630.
+(pdftex.def)             Requested size: 440.64517pt x 251.94063pt.
+[11]
+<HW4_files/figure-latex/unnamed-chunk-12-1.pdf, id=192, 436.63126pt x 285.065pt>
+File: HW4_files/figure-latex/unnamed-chunk-12-1.pdf Graphic file (type pdf)
+<use HW4_files/figure-latex/unnamed-chunk-12-1.pdf>
+Package pdftex.def Info: HW4_files/figure-latex/unnamed-chunk-12-1.pdf  used on input line 666.
+(pdftex.def)             Requested size: 436.63019pt x 285.0643pt.
+[12 <./HW4_files/figure-latex/unnamed-chunk-11-1.pdf>]
+<HW4_files/figure-latex/unnamed-chunk-13-1.pdf, id=204, 436.63126pt x 285.065pt>
+File: HW4_files/figure-latex/unnamed-chunk-13-1.pdf Graphic file (type pdf)
+<use HW4_files/figure-latex/unnamed-chunk-13-1.pdf>
+Package pdftex.def Info: HW4_files/figure-latex/unnamed-chunk-13-1.pdf  used on input line 700.
+(pdftex.def)             Requested size: 436.63019pt x 285.0643pt.
+[13 <./HW4_files/figure-latex/unnamed-chunk-12-1.pdf>] [14 <./HW4_files/figure-latex/unnamed-chunk-13-1.pdf>]
+<HW4_files/figure-latex/unnamed-chunk-16-1.pdf, id=234, 438.63875pt x 249.93375pt>
 File: HW4_files/figure-latex/unnamed-chunk-16-1.pdf Graphic file (type pdf)
 <use HW4_files/figure-latex/unnamed-chunk-16-1.pdf>
-Package pdftex.def Info: HW4_files/figure-latex/unnamed-chunk-16-1.pdf  used on input line 659.
-(pdftex.def)             Requested size: 382.44531pt x 203.77007pt.
-<HW4_files/figure-latex/unnamed-chunk-16-2.pdf, id=163, 437.635pt x 252.945pt>
-File: HW4_files/figure-latex/unnamed-chunk-16-2.pdf Graphic file (type pdf)
-<use HW4_files/figure-latex/unnamed-chunk-16-2.pdf>
-Package pdftex.def Info: HW4_files/figure-latex/unnamed-chunk-16-2.pdf  used on input line 671.
-(pdftex.def)             Requested size: 437.6406pt x 252.94823pt.
-[11 <./HW4_files/figure-latex/unnamed-chunk-16-1.pdf>]
-<HW4_files/figure-latex/unnamed-chunk-17-1.pdf, id=175, 436.63126pt x 252.945pt>
-File: HW4_files/figure-latex/unnamed-chunk-17-1.pdf Graphic file (type pdf)
-<use HW4_files/figure-latex/unnamed-chunk-17-1.pdf>
-Package pdftex.def Info: HW4_files/figure-latex/unnamed-chunk-17-1.pdf  used on input line 703.
+Package pdftex.def Info: HW4_files/figure-latex/unnamed-chunk-16-1.pdf  used on input line 799.
+(pdftex.def)             Requested size: 438.64435pt x 249.93694pt.
+[15 <./HW4_files/figure-latex/unnamed-chunk-16-1.pdf>]
+<HW4_files/figure-latex/unnamed-chunk-18-1.pdf, id=247, 387.4475pt x 203.76125pt>
+File: HW4_files/figure-latex/unnamed-chunk-18-1.pdf Graphic file (type pdf)
+<use HW4_files/figure-latex/unnamed-chunk-18-1.pdf>
+Package pdftex.def Info: HW4_files/figure-latex/unnamed-chunk-18-1.pdf  used on input line 865.
+(pdftex.def)             Requested size: 387.45245pt x 203.76384pt.
+[16]
+<HW4_files/figure-latex/unnamed-chunk-18-2.pdf, id=253, 436.63126pt x 252.945pt>
+File: HW4_files/figure-latex/unnamed-chunk-18-2.pdf Graphic file (type pdf)
+<use HW4_files/figure-latex/unnamed-chunk-18-2.pdf>
+Package pdftex.def Info: HW4_files/figure-latex/unnamed-chunk-18-2.pdf  used on input line 877.
 (pdftex.def)             Requested size: 436.63019pt x 252.94438pt.
-[12 <./HW4_files/figure-latex/unnamed-chunk-16-2.pdf>] [13 <./HW4_files/figure-latex/unnamed-chunk-17-1.pdf>] (./HW4.aux)
+[17 <./HW4_files/figure-latex/unnamed-chunk-18-1.pdf> <./HW4_files/figure-latex/unnamed-chunk-18-2.pdf>]
+<HW4_files/figure-latex/unnamed-chunk-19-1.pdf, id=273, 436.63126pt x 252.945pt>
+File: HW4_files/figure-latex/unnamed-chunk-19-1.pdf Graphic file (type pdf)
+<use HW4_files/figure-latex/unnamed-chunk-19-1.pdf>
+Package pdftex.def Info: HW4_files/figure-latex/unnamed-chunk-19-1.pdf  used on input line 909.
+(pdftex.def)             Requested size: 436.63019pt x 252.94438pt.
+
+Overfull \hbox (65.74342pt too wide) in paragraph at lines 929--929
+[]\T1/lmtt/m/n/10 ##  randomForest(formula = mpg ~ ., data = Auto_new, mtry = 7, importance = TRUE,      subset = train)[] 
+ []
+
+[18 <./HW4_files/figure-latex/unnamed-chunk-19-1.pdf>] [19]
+<HW4_files/figure-latex/unnamed-chunk-23-1.pdf, id=292, 448.67625pt x 300.12125pt>
+File: HW4_files/figure-latex/unnamed-chunk-23-1.pdf Graphic file (type pdf)
+<use HW4_files/figure-latex/unnamed-chunk-23-1.pdf>
+Package pdftex.def Info: HW4_files/figure-latex/unnamed-chunk-23-1.pdf  used on input line 1088.
+(pdftex.def)             Requested size: 448.68884pt x 300.12967pt.
+[20] [21 <./HW4_files/figure-latex/unnamed-chunk-23-1.pdf>] [22] [23] (./HW4.aux)
 Package rerunfilecheck Info: File `HW4.out' has not changed.
-(rerunfilecheck)             Checksum: 5E4421EE290D8BE2F90067893EF8D5E0;516.
+(rerunfilecheck)             Checksum: CB8D5B1EF272A56CB6A0D95AD22B13BA;1301.
  ) 
 Here is how much of TeX's memory you used:
- 11814 strings out of 480260
- 185450 string characters out of 5893669
- 479578 words of memory out of 5000000
- 29492 multiletter control sequences out of 15000+600000
+ 11895 strings out of 480260
+ 187654 string characters out of 5893669
+ 481255 words of memory out of 5000000
+ 29540 multiletter control sequences out of 15000+600000
  509868 words of font info for 68 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 72i,7n,77p,736b,436s stack positions out of 10000i,1000n,20000p,200000b,200000s
-{/Users/pchen/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}{/Users/pchen/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ts1.enc}{/Users/pchen/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc}{/Users/pchen/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc}{/Users/pchen/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathit.enc}</Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx10.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx12.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi10.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr10.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr12.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr17.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr7.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy10.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy7.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtk10.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtt10.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtti10.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/symbols/msam10.pfb>
-Output written on HW4.pdf (13 pages, 1055291 bytes).
+ 72i,7n,77p,536b,436s stack positions out of 10000i,1000n,20000p,200000b,200000s
+{/Users/pchen/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ec.enc}{/Users/pchen/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-ts1.enc}{/Users/pchen/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathsy.enc}{/Users/pchen/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathex.enc}{/Users/pchen/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-mathit.enc}{/Users/pchen/Library/TinyTeX/texmf-dist/fonts/enc/dvips/lm/lm-rm.enc}</Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx10.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmbx12.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmex10.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi10.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmmi7.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr10.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr12.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr17.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmr7.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy10.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmsy7.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtk10.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtt10.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/lm/lmtti10.pfb></Users/pchen/Library/TinyTeX/texmf-dist/fonts/type1/public/amsfonts/symbols/msam10.pfb>
+Output written on HW4.pdf (23 pages, 1570735 bytes).
 PDF statistics:
- 273 PDF objects out of 1000 (max. 8388607)
- 200 compressed objects within 2 object streams
- 36 named destinations out of 1000 (max. 500000)
- 123 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 413 PDF objects out of 1000 (max. 8388607)
+ 309 compressed objects within 4 object streams
+ 64 named destinations out of 1000 (max. 500000)
+ 196 words of extra memory for PDF output out of 10000 (max. 10000000)
 
