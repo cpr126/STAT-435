@@ -1,0 +1,344 @@
+---
+title: "STAT 435 HW5"
+author: "Peiran Chen"
+date: "06/03/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ISLR2)
+library(knitr)
+library(e1071)
+```
+
+## 1.
+
+### (a).
+
+To perform a principal components regression, we can then fit the linear regression model
+
+$$
+\begin{aligned}
+y_i &= \theta_0 + \theta_1 z_{i1} + ... + \theta_Mz_{iM} + \varepsilon_i\\
+&= \theta_0 + \sum_{m = 1}^M\theta_mz_{im} + \varepsilon_i, \;\;\; i = 1, ..., n
+\end{aligned}
+$$
+
+using least squares. And the regression coefficients are given by $\theta_0, \theta_1, ..., \theta_M$.
+
+### (b).
+
+After plug in Equation 1, we have
+
+$$
+\begin{aligned}
+y_i = \theta_0 + \theta_1 (\phi_{11}x_{i1} + \phi_{21}x_{i2} + ... + \phi_{p1}x_{ip}) + ... + \theta_M(\phi_{1M}x_{i1} + \phi_{2M}x_{i2} + ... + \phi_{pM}x_{ip}) + \varepsilon_i \\
+\end{aligned}
+$$
+
+### (c).
+
+To see that the principal components regression model is linear in the columns of \textbf{$X$}. We can expand the formula we get from part (b).
+
+$$
+\begin{aligned}
+y_i &= \theta_0 + \theta_1 (\phi_{11}x_{i1} + \phi_{21}x_{i2} + ... + \phi_{p1}x_{ip}) + ... + \theta_M(\phi_{1M}x_{i1} + \phi_{2M}x_{i2} + ... + \phi_{pM}x_{ip}) + \varepsilon_i \\
+&= \theta_0 + x_{i1}(\theta_1\phi_{11} + ... + \theta_M\phi_{1M}) + x_{i2}(\theta_1\phi_{21} + ... + \theta_M\phi_{2M}) + ... + x_{ip}(\theta_1\phi_{p1} + ... + \theta_M\phi_{pM})\\
+&= \theta_0 + x_{i1}\left(\sum_{m = 1}^M \theta_m\phi_{1m}\right) + x_{i2}\left(\sum_{m = 1}^M \theta_m\phi_{2m}\right) + ... + x_{ip}\left(\sum_{m = 1}^M \theta_m\phi_{pm}\right)\\
+&= \theta_0 + \beta_1 x_{i1} + \beta_2x_{i2} + ... + \beta_px_{ip}
+\end{aligned}
+$$ 
+
+Where $\beta _1 = \sum_{m = 1}^M \theta_m\phi_{1m}, ... , \beta_p = \sum_{m = 1}^M \theta_m\phi_{pm}$ are just linear and not quadratic or etc, they are constants.
+
+Hence, we are able to see that it's just a linear combination of $x$s. Hence, it's linear in the columns of \textbf{$X$}.
+
+### (d).
+
+The Claim is False. In a regression setting, suppose we have the below linear model $$Y = \beta_0 + \beta_1 X_1  + ... + \beta_p X_p + \varepsilon $$
+
+
+Then, our derivation of the PCR is just a special case of the linear model. Where the dimension reduction in our PCR serves to constrain the estimated $\beta_p$ coefficients, since now they must take the form $\beta_p = \sum_{m = 1}^M \theta_m\phi_{pm}$. This constraint on the form of the coefficients has the potential to bias the coefficient estimates. However, in situations where $p$ is large relative to $n$, selecting the value $M \ll p$ can significantly reduce the variance of the fitted coefficients. And the claim is true only when we are fitting a $m = p$ PCR, that way, our constrain of the $\beta_p$ is no longer in effect and we would end up doing least squares solution.
+
+## 2.
+
+
+### (a).
+
+- Simulate an $n = 50 \times p = 2$ data matrix. And we shift the mean of the first 25 observations relative to the next 25 observations.
+
+
+```{r, eval = TRUE}
+set.seed(435)
+
+x <- matrix(rnorm(50 * 2), ncol = 2)
+
+x[1: 25, 1] <- x[1:25, 1] + 3
+x[1: 25, 2] <- x[1:25, 2] - 4
+
+left <- 0
+right <- 0
+
+for (i in 1:25){
+  for (j in 1:2){
+    left <- left + mean((x[i, j] - x[1:25, j])^2)
+    right <- right + (x[i, j] - mean(x[1:25, j]))^2
+  }
+}
+
+
+kable(data.frame("Left" = left, "Right" = right*2), caption = "Cluster 1")
+```
+
+As we can see from above, left-hand side of (12.18) is equal to the right-hand side of (12.18). Hence, we have shown ***computationally*** that (12.18) holds.
+
+
+### (b).
+
+***Proof:*** If $\frac{1}{|C_k|} \sum_{i, i' \in C_k} \sum_{j = 1}^p (x_{ij} - x_{i'j})^2$ holds, then
+
+$$
+\begin{aligned}
+\frac{1}{|C_k|} \sum_{i, i' \in C_k} \sum_{j = 1}^p (x_{ij} - x_{i'j})^2 &= \frac{1}{|C_k|} \sum_{i, i' \in C_k} \sum_{j = 1}^p (x_{ij} - \bar x_{kj} + \bar x_{kj} - x_{i'j})^2\\
+&=\frac{1}{|C_k|} \sum_{i, i' \in C_k} \sum_{j = 1}^p ((x_{ij} - \bar x_{kj}) - (x_{i'j} - \bar x_{kj}) )^2\\
+&=\frac{1}{|C_k|} \sum_{i, i' \in C_k} \sum_{j = 1}^p ((x_{ij} - \bar x_{kj})^2 -2(x_{ij} - \bar x_{kj})(x_{i'j} - \bar x_{kj}) +  (x_{i'j} - \bar x_{kj})^2)\\
+&= \frac{|C_k|}{|C_k|} \sum_{i \in C_k} \sum_{j = 1}^p (x_{ij} - \bar x_{kj})^2 - \frac2{|C_k|} \sum_{i, i' \in C_k} \sum_{j = 1}^p (x_{ij} - \bar x_{kj})(x_{i'j} - \bar x_{kj}) + \frac{|C_k|}{|C_k|} \sum_{i' \in C_k} \sum_{j = 1}^p (x_{i'j} - \bar x_{kj})^2\\
+&= \sum_{i \in C_k} \sum_{j = 1}^p (x_{ij} - \bar x_{kj})^2 - 0 + \sum_{i' \in C_k} \sum_{j = 1}^p (x_{i'j} - \bar x_{kj})^2\\
+&= 2\sum_{i \in C_k} \sum_{j = 1}^p (x_{ij} - \bar x_{kj})^2
+\end{aligned}
+$$
+\hfill\ensuremath{\Box}
+
+
+## 3.
+
+### (a).
+
+
+
+## 4.
+
+### (a).
+
+
+```{r}
+data(OJ)
+
+set.seed(435)
+
+train <- sample(nrow(OJ), 800)
+test <- -train
+
+OJ_train <- OJ[train,]
+OJ_test <- OJ[-train,]
+```
+
+
+### (b).
+
+```{r}
+svm.fit <- svm(Purchase ~., data = OJ_train, kernel = "linear",
+               cost = 0.01, scale = FALSE)
+
+summary(svm.fit)
+```
+
+We see from the result that there were 628 suppoort vectors, 316 in one class and 312 in the other.
+
+
+### (c).
+
+
+```{r}
+table(predict = predict(svm.fit,OJ_train), truth = OJ_train$Purchase)
+```
+Thus, with this confusion matrix, we can calculate the Training Error Rate is 
+\[(203 + 19)/800 = 0.2775\]
+
+
+```{r}
+table(predict = predict(svm.fit,OJ_test), truth = OJ_test$Purchase)
+```
+
+With the above Confusion Matrix, we calculated the Testing Error Rate is 
+\[(66 + 7)/270= 0.2703704\]
+
+
+### (d).
+
+With the help of \texttt{tune()} function, we can perform ten-Fold Cross-Validation to help us select the optimal value for \texttt{cost}.
+
+
+```{r}
+set.seed(435)
+tune.out <- tune(svm, Purchase ~., data = OJ_train, kernel = "linear", ranges = list(cost = c(0.01, 0.1, 1, 5, 10)))
+summary(tune.out)
+```
+
+We see that \texttt{cost = 0.1} results in the lowest Cross-Validation Error Rate. 
+
+
+### (e).
+
+```{r}
+bestmod <- tune.out$best.model
+
+table(predict = predict(bestmod,OJ_train), truth = OJ_train$Purchase)
+```
+
+With \texttt{cost = 0.1}, our new Training Error Rate is
+
+\[(74 + 59)/800 = 0.16625\]
+
+```{r}
+table(predict = predict(bestmod,OJ_test), truth = OJ_test$Purchase)
+```
+
+With \texttt{cost = 0.1}, our new Testing Error Rate is
+
+\[(26 + 19)/270 = 0.1666667\]
+
+Which, both Training and Testing Error Rate decreased from the previous \texttt{cost = 0.01}.
+
+
+### (f).
+
+```{r}
+# Default Gamma = 1
+svm.radial.fit <- svm(Purchase ~., data = OJ_train, gamma = 1, kernel = "radial", cost = 0.01)
+summary(svm.radial.fit)
+```
+
+We see from the result that there were 654 support vectors, 342 in one class and 312 in the other.
+
+---
+
+```{r}
+table(predict = predict(svm.radial.fit,OJ_train), truth = OJ_train$Purchase)
+```
+Thus, with this confusion matrix, we can calculate the Training Error Rate is 
+\[312/800 = 0.39\]
+
+
+```{r}
+table(predict = predict(svm.radial.fit,OJ_test), truth = OJ_test$Purchase)
+```
+
+With the above Confusion Matrix, we calculated the Testing Error Rate is 
+\[105/270= 0.3888889\]
+
+---
+
+
+With the help of \texttt{tune()} function, we can perform ten-Fold Cross-Validation to help us select the optimal value for \texttt{cost}.
+
+
+```{r}
+set.seed(435)
+tune.out <- tune(svm, Purchase ~., data = OJ_train,
+                 kernel = "radial",
+                 ranges = list(cost = c(0.01, 0.1, 1, 5, 10)))
+summary(tune.out)
+```
+
+We see that \texttt{cost = 10} results in the lowest Cross-Validation Error Rate. 
+
+---
+
+```{r}
+bestmod <- tune.out$best.model
+
+table(predict = predict(bestmod,OJ_train), truth = OJ_train$Purchase)
+```
+
+With \texttt{cost = 10}, our new Training Error Rate is
+
+\[(77 + 37)/800 = 0.1425\]
+
+```{r}
+table(predict = predict(bestmod,OJ_test), truth = OJ_test$Purchase)
+```
+
+With \texttt{cost = 10}, our new Testing Error Rate is
+
+\[(33 + 15)/270 = 0.1777778\]
+
+Which, both Training and Testing Error Rate decreased from the previous \texttt{cost = 0.01}.
+
+### (g).
+
+```{r}
+# Set degree = 2
+svm.poly.fit <- svm(Purchase ~., data = OJ_train, degree = 2, kernel = "polynomial", cost = 0.01)
+summary(svm.poly.fit)
+```
+
+We see from the result that there were 632 support vectors, 320 in one class and 312 in the other.
+
+---
+
+```{r}
+table(predict = predict(svm.poly.fit,OJ_train), truth = OJ_train$Purchase)
+```
+Thus, with this confusion matrix, we can calculate the Training Error Rate is 
+\[(295 + 2)/800 = 0.37125\]
+
+
+```{r}
+table(predict = predict(svm.poly.fit,OJ_test), truth = OJ_test$Purchase)
+```
+
+With the above Confusion Matrix, we calculated the Testing Error Rate is 
+\[97/270= 0.3592593\]
+
+---
+
+
+With the help of \texttt{tune()} function, we can perform ten-Fold Cross-Validation to help us select the optimal value for \texttt{cost}.
+
+
+```{r}
+set.seed(435)
+tune.out <- tune(svm, Purchase ~., data = OJ_train,
+                 kernel = "polynomial",
+                 ranges = list(cost = c(0.01, 0.1, 1, 5, 10)))
+summary(tune.out)
+```
+
+We see that \texttt{cost = 5} results in the lowest Cross-Validation Error Rate. 
+
+---
+
+```{r}
+bestmod <- tune.out$best.model
+
+table(predict = predict(bestmod,OJ_train), truth = OJ_train$Purchase)
+```
+
+With \texttt{cost = 5}, our new Training Error Rate is
+
+\[(82 + 35)/800 = 0.14625\]
+
+```{r}
+table(predict = predict(bestmod,OJ_test), truth = OJ_test$Purchase)
+```
+
+With \texttt{cost = 10}, our new Testing Error Rate is
+
+\[(34 + 15)/270 = 0.1814815\]
+
+Which, both Training and Testing Error Rate decreased from the previous \texttt{cost = 0.01}.
+
+
+### (h).
+
+```{r}
+kable(tibble(" " = c("Kernel","gamma","degree","Cost", "Test Error Rate"),
+                 "SVC" = c("NA","NA","NA", 0.1, 0.1666667),
+                 "SVM" = c("radial",1,"NA", 10, 0.1777778),
+                 "SVM " = c("polynomial","NA",2, 5, 0.1814815)))
+```
+
+As we can see from above, the Support Vector Classifier performs best which has the lowest Test Error Rate on this data.
