@@ -116,7 +116,78 @@ $$
 
 ### (a).
 
+```{r}
+set.seed(435)
 
+obs_1 <- data.frame(replicate(50, rnorm(20, mean = 0, sd = 0.5))) %>%
+  mutate(id = 1)
+obs_2 <- data.frame(replicate(50, rnorm(20, mean = 1, sd = 0.5))) %>%
+  mutate(id = 2)
+obs_3 <- data.frame(replicate(50, rnorm(20, mean = 2, sd = 0.5))) %>%
+  mutate(id = 3)
+
+data <- rbind(obs_1, obs_2, obs_3)
+```
+
+
+### (b).
+
+```{r}
+pr.out <- prcomp(data %>% select(-id), scale = TRUE)
+
+
+ggplot(data.frame(PC1 = pr.out$x[, 1], PC2 = pr.out$x[, 2], id = data$id), aes(x= PC1, y = PC2, col = id)) + 
+  geom_point() + 
+  theme_bw() + 
+  theme(legend.position = "none")
+
+```
+
+### (c).
+
+```{r}
+km.out <- kmeans(data, 3, nstart = 20)
+table(predict = km.out$cluster, true = data$id)
+```
+After performing K-means with K = 3, all of the data are perfectly clustered.
+
+### (d).
+
+
+```{r}
+km.out <- kmeans(data, 2, nstart = 20)
+table(predict = km.out$cluster, true = data$id)
+```
+After performing K-means with K = 2, all of the data are clustered into 2 clusters.
+
+
+### (e).
+
+
+```{r}
+km.out <- kmeans(data, 4, nstart = 20)
+table(predict = km.out$cluster, true = data$id)
+```
+
+This time, with K = 4, our cluster three got split into 2 clusters.
+
+
+### (f).
+
+```{r}
+pr.out.2 <- kmeans(pr.out$x[,1:2], 3, nstart = 20)
+table(predict = pr.out.2$cluster, true = data$id)
+```
+We essentially getting the same way of clustering these into 3 groups, hence the PCA carries enough information.
+
+### (g).
+
+```{r}
+pr.out.3 <- kmeans(scale(data), 3, nstart = 20)
+table(predict = pr.out.3$cluster, true = data$id)
+
+```
+It's the same as the results obtained in (b), and scaling does not change the results.
 
 ## 4.
 
